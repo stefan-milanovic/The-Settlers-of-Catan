@@ -7,6 +7,7 @@ using Photon.Realtime;
 using UnityEngine.UI;
 using Photon.Pun;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class ChatController : MonoBehaviour, IChatClientListener
 {
@@ -62,6 +63,21 @@ public class ChatController : MonoBehaviour, IChatClientListener
 
     // Start is called before the first frame update
     void Start()
+    {
+        
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += InitialiseChatController;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= InitialiseChatController;
+    }
+
+    private void InitialiseChatController(Scene scene, LoadSceneMode loadSceneMode)
     {
         chatAppSettings = PhotonNetwork.PhotonServerSettings.AppSettings;
 
