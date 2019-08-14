@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using Photon.Chat;
 
 public class LobbyController : MonoBehaviourPunCallbacks
 {
@@ -29,10 +30,12 @@ public class LobbyController : MonoBehaviourPunCallbacks
     private const byte MAX_NUMBER_OF_PLAYERS = 4;
 
 
+    private MainMenu mainMenu;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        mainMenu = GameObject.Find("MainMenuControls").GetComponent<MainMenu>();
     }
 
     // Update is called once per frame
@@ -113,7 +116,11 @@ public class LobbyController : MonoBehaviourPunCallbacks
     
     public void CreateRoom(string roomName, string password)
     {
-        Debug.Log("Creating new room");
+
+        // Join room chat.
+
+        // ChatClient chatClient = new ChatClient(this);
+        
 
         RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = MAX_NUMBER_OF_PLAYERS };
 
@@ -126,6 +133,8 @@ public class LobbyController : MonoBehaviourPunCallbacks
         Debug.Log("ERROR: Room with same name exists");
 
         // signal to main menu to show error message
+
+        mainMenu.DisplayRoomCreationErrorMessage();
 
     }
 

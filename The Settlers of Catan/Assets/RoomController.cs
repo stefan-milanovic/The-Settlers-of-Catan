@@ -33,10 +33,12 @@ public class RoomController : MonoBehaviourPunCallbacks
 
 
     private MainMenu mainMenu;
+    private ChatController chatController;
     // Start is called before the first frame update
     void Start()
     {
         mainMenu = GameObject.Find("MainMenuControls").GetComponent<MainMenu>();
+        chatController = GameObject.Find("ChatController").GetComponent<ChatController>();
     }
 
     // Update is called once per frame
@@ -67,12 +69,13 @@ public class RoomController : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
-        // switch to room panel
+        // Switch to room panel
 
         mainMenu.ToggleWindow(MainMenu.WindowCode.ROOM_WINDOW);
-
         roomTitle.text = PhotonNetwork.CurrentRoom.Name;
 
+        // Join room chat as well.
+        chatController.JoinChat(PhotonNetwork.CurrentRoom.Name);
 
         // do this code only when it's (4/4)
         if (PhotonNetwork.IsMasterClient)
@@ -127,6 +130,7 @@ public class RoomController : MonoBehaviourPunCallbacks
         // PhotonNetwork.LeaveLobby();
         // StartCoroutine(rejoinLobby());
 
+        chatController.LeaveChat();
         PhotonNetwork.LeaveRoom();
     }
 }

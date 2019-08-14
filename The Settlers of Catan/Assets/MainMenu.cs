@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-using Photon.Pun;
+
 
 public class MainMenu : MonoBehaviour
 {
@@ -24,6 +25,10 @@ public class MainMenu : MonoBehaviour
     
     private LobbyController lobbyController;
     private RoomController roomController;
+
+
+    [SerializeField]
+    private GameObject errorBar;
 
     // Start is called before the first frame update
     void Start()
@@ -216,7 +221,6 @@ public class MainMenu : MonoBehaviour
 
         string roomName = GameObject.FindGameObjectWithTag("RoomNameField").GetComponent<InputField>().text;
         string password = GameObject.FindGameObjectWithTag("RoomPasswordField").GetComponent<InputField>().text;
-
         lobbyController.CreateRoom(roomName, password);
         
     }
@@ -261,5 +265,25 @@ public class MainMenu : MonoBehaviour
         button.interactable = true;
     }
 
+    public void DisplayRoomCreationErrorMessage()
+    {
 
+        errorBar.SetActive(true);
+        errorBar.GetComponent<CanvasGroup>().alpha = 1;
+        StartCoroutine(BarFadeOut());
+    }
+
+    IEnumerator BarFadeOut()
+    {
+
+        yield return new WaitForSeconds(1);
+
+        for (float f = 1f; f >= -0.025f; f -= 0.025f)
+        {
+            errorBar.GetComponent<CanvasGroup>().alpha -= 0.025f;
+            yield return new WaitForSeconds(0.025f);
+        }
+        
+        errorBar.SetActive(false);
+    }
 }
