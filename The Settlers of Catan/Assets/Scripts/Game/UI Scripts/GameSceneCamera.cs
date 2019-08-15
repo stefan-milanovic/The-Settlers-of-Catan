@@ -115,5 +115,6 @@ public class GameSceneCamera : MonoBehaviour
     public void Update()
     {
         // Debug.Log(1 / Time.deltaTime);
+
     }
 }
