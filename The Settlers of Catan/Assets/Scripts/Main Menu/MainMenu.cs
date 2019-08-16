@@ -119,7 +119,8 @@ public class MainMenu : MonoBehaviour
         TUTORIAL_WINDOW,
         ABOUT_WINDOW,
         ROOM_CREATION_WINDOW,
-        LOBBY_WINDOW
+        LOBBY_WINDOW,
+        ROOM_WINDOW
         */
         switch (windowToOpen)
         {
