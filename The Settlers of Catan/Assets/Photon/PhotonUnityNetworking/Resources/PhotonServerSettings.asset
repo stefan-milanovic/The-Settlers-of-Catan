@@ -34,5 +34,14 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - RPCSetMaterial
+  - RPCSetNumber
+  - RPCInit
+  - RPCBeginTurn
+  - RPCConstructSettlement
+  - RPCRegisterPlayer
+  - RPCConstructRoad
+  - RPCConstructRoad
+  - RPCSetText
   DisableAutoOpenWizard: 1
   ShowSettings: 1

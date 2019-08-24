@@ -36,9 +36,8 @@ public class MainMenu : MonoBehaviour
         // localPlayer = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManager>().playerPrefab.GetComponent<PlayerConnection>();
         lobbyController = GameObject.Find("LobbyController").GetComponent<LobbyController>();
         roomController = GameObject.Find("RoomController").GetComponent<RoomController>();
-
+        
         // Connect to Photon servers.
-
         lobbyController.ConnectToServer();
         
     }

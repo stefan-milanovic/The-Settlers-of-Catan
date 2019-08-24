@@ -61,8 +61,9 @@ public class RoomController : MonoBehaviourPunCallbacks
         foreach (Player player in PhotonNetwork.PlayerList)
         {
             GameObject slot = Instantiate(playerSlotPrefab, playerList);
-            Text slotText = slot.transform.GetChild(0).GetComponent<Text>();
-            // slotText.text = player.NickName;
+            TextMeshProUGUI slotText = slot.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
+
+            slotText.text = player.NickName;
         }
     }
 

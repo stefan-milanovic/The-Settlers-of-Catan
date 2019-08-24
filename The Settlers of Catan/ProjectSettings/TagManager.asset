@@ -29,6 +29,14 @@ TagManager:
   - DiceGround
   - ResourceButton
   - ConstructionButton
+  - DevelopmentButton
+  - Hex
+  - Intersection
+  - RippleSystem
+  - IntersectionCollider
+  - Path
+  - SpecialButton
+  - TradeButton
   layers:
   - Default
   - TransparentFX

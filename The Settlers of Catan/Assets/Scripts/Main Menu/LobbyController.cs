@@ -28,7 +28,7 @@ public class LobbyController : MonoBehaviourPunCallbacks
     private GameObject roomSlotPrefab;
 
     private const byte MAX_NUMBER_OF_PLAYERS = 4;
-
+    private const string START_NAME = "Anonymous";
 
     private MainMenu mainMenu;
 
@@ -53,12 +53,15 @@ public class LobbyController : MonoBehaviourPunCallbacks
         localRoomsList = new List<RoomInfo>();
 
         // player name : 9min in https://www.youtube.com/watch?v=onDorc3Qfn0
+
+        // Initialize player name.
+        PlayerNameUpdate(START_NAME);
     }
 
     public void PlayerNameUpdate(string newName)
     {
         PhotonNetwork.NickName = newName;
-        PlayerPrefs.SetString("NickName", newName);
+        PlayerPrefs.SetString("Username", newName);
     }
 
     public void JoinPhotonLobby()

@@ -80,11 +80,6 @@ public class ChatController : MonoBehaviour, IChatClientListener
     private void InitialiseChatController(Scene scene, LoadSceneMode loadSceneMode)
     {
         chatAppSettings = PhotonNetwork.PhotonServerSettings.AppSettings;
-
-        if (string.IsNullOrEmpty(UserName))
-        {
-            this.UserName = "Player" + Random.Range(1, 100);
-        }
     }
 
     // Update is called once per frame
@@ -101,13 +96,15 @@ public class ChatController : MonoBehaviour, IChatClientListener
     {
         chatClient = new ChatClient(this);
 
+        UserName = PhotonNetwork.NickName;
         chatClient.Connect(chatAppSettings.AppIdChat, "1.0", new Photon.Chat.AuthenticationValues(UserName));
         
-        Debug.Log("Connecting as: " + this.UserName);
+        Debug.Log("Connecting as: " + UserName);
     }
 
     public void JoinChat(string roomName)
     {
+        Debug.Log(PhotonNetwork.NickName);
         Connect();
         selectedChannelName = roomName;
     }

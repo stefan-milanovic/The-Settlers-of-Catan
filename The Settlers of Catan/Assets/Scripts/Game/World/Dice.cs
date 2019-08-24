@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +21,11 @@ public class Dice : MonoBehaviour
     [SerializeField]
     private DiceSide[] diceSides;
 
+    private PhotonView photonView;
+
+    [SerializeField]
+    private DiceController diceController;
+
     public int getDiceValue()
     {
         return diceValue;
@@ -28,6 +34,7 @@ public class Dice : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        photonView = GetComponent<PhotonView>();
         rigidBody = GetComponent<Rigidbody>();
         initPosition = transform.position;
         rigidBody.useGravity = false;
@@ -36,11 +43,7 @@ public class Dice : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            RollDice();
-        }
-
+        
         if (rigidBody.IsSleeping() && !hasLanded && thrown)
         {
             hasLanded = true;
@@ -54,7 +57,7 @@ public class Dice : MonoBehaviour
     }
 
 
-    private void RollDice()
+    public void RollDice()
     {
 
         // place dice into it's throw position
@@ -97,6 +100,9 @@ public class Dice : MonoBehaviour
             {
                 diceValue = diceSide.GetSideValue();
                 Debug.Log("Dice value: " + diceValue);
+
+                // Inform dice controller.
+                diceController.DiceFallen(diceValue);
             }
         }
     }
