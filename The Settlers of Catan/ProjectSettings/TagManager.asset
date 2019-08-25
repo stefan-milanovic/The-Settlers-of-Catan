@@ -37,6 +37,8 @@ TagManager:
   - Path
   - SpecialButton
   - TradeButton
+  - RollDiceButton
+  - EndTurnButton
   layers:
   - Default
   - TransparentFX

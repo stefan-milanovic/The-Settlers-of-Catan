@@ -43,5 +43,7 @@ MonoBehaviour:
   - RPCConstructRoad
   - RPCConstructRoad
   - RPCSetText
+  - PunRegisterPlayer
+  - RPCSetPlayer
   DisableAutoOpenWizard: 1
   ShowSettings: 1

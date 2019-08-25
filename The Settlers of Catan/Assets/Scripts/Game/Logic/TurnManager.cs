@@ -245,7 +245,7 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 
     #region Callbacks
 
-    // called internally -- everyone does this
+    // called internally
     void ProcessOnEvent(byte eventCode, object content, int senderId)
     {
         Player sender = PhotonNetwork.CurrentRoom.GetPlayer(senderId);
@@ -283,7 +283,7 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
             case EvRegisterPlayer:
                 {
                     playersConnected++;
-                    if (playersConnected == 2)
+                    if (playersConnected == 1)
                     {
                         this.StartGame();
                     }

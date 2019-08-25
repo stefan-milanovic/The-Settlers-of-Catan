@@ -7,20 +7,6 @@ using UnityEngine;
 public class HumanPlayer : GamePlayer
 {
    
-    // Phases
-    private enum Phase
-    {
-        FIRST_SETTLEMENT_PLACEMENT,
-        FIRST_ROAD_PLACEMENT,
-        SECOND_SETTLEMENT_PLACEMENT,
-        SECOND_ROAD_PLACEMENT,
-        ROLL_DICE
-    }
-
-    // during dice roll phase the player can activate a development card from earlier
-
-    private Phase currentPhase = Phase.FIRST_SETTLEMENT_PLACEMENT;
-    
     // Start is called before the first frame update
     void Start()
     {
@@ -70,6 +56,14 @@ public class HumanPlayer : GamePlayer
 
             // Connect to Turn Manager - ONLY LOCAL PLAYER CALLS THIS.
             ConnectToTurnManager();
+
+            // Claim an empty leaderboard slot.
+
+            GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().RegisterPlayer(PhotonNetwork.LocalPlayer);
+
+            // Connect to end turn button.
+
+
         }
         else
         {
@@ -98,28 +92,39 @@ public class HumanPlayer : GamePlayer
         {
             return;
         }
-
-        if (setUpPhase)
+        else
         {
 
-            if (currentPhase == Phase.FIRST_SETTLEMENT_PLACEMENT || currentPhase == Phase.SECOND_SETTLEMENT_PLACEMENT)
+            // It is my turn to play.
+
+            if (setUpPhase)
             {
-                FindSelectableIntersections();
-                SelectSettlementLocation();
+
+                if (currentPhase == Phase.FIRST_SETTLEMENT_PLACEMENT || currentPhase == Phase.SECOND_SETTLEMENT_PLACEMENT)
+                {
+                    FindSelectableIntersections();
+                    SelectSettlementLocation();
+                }
+
+                if (currentPhase == Phase.FIRST_ROAD_PLACEMENT || currentPhase == Phase.SECOND_ROAD_PLACEMENT)
+                {
+                    FindSelectablePaths();
+                    SelectRoadLocation();
+                }
             }
 
-            if (currentPhase == Phase.FIRST_ROAD_PLACEMENT || currentPhase == Phase.SECOND_ROAD_PLACEMENT)
+            if (currentPhase == Phase.ROLL_DICE)
             {
-                FindSelectablePaths();
-                SelectRoadLocation();
-            }   
-        }
+                EnableRolling();
+                // Waiting for dice to be rolled. When they're rolled the WaitForDiceResult() method of GamePlayer will be called.
+            }
 
-        if (currentPhase == Phase.ROLL_DICE)
-        {
-            EnableRollDiceButton();
-            // Waiting for dice to be rolled.
+            if (currentPhase == Phase.TRADE_BUILD)
+            {
+                // Wait for action.
+            }
         }
+        
     }
 
 
@@ -147,7 +152,7 @@ public class HumanPlayer : GamePlayer
                         myIntersections.Add(i);
 
                         // Move on to next phase.
-                        selectingIntersection = false;
+                        busy = false;
 
                         if (currentTurn == 1)
                         {
@@ -189,18 +194,18 @@ public class HumanPlayer : GamePlayer
 
                         myPaths.Add(p);
 
-                        selectingPath = false;
+                        busy = false;
 
                         if (currentTurn == 1)
                         {
                             currentPhase = Phase.SECOND_SETTLEMENT_PLACEMENT;
                         } else if (currentTurn == 2)
                         {
-
+                            currentPhase = Phase.ROLL_DICE;
                         }
                         
 
-                        EndTurn();
+                        EndLocalTurn();
                     }
                     
                 }
@@ -208,4 +213,5 @@ public class HumanPlayer : GamePlayer
 
         }
     }
+    
 }

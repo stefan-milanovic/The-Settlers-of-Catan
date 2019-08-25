@@ -43,7 +43,7 @@ public class Dice : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        Debug.Log(gameObject.name + " - hasLanded = " + hasLanded + ", thrown = " + thrown);
         if (rigidBody.IsSleeping() && !hasLanded && thrown)
         {
             hasLanded = true;
@@ -60,18 +60,19 @@ public class Dice : MonoBehaviour
     public void RollDice()
     {
 
-        // place dice into it's throw position
-        
+        Reset();
+
         if (!thrown && !hasLanded)
         {
             transform.localPosition += throwPosition;
             thrown = true;
             rigidBody.useGravity = true;
             rigidBody.AddTorque(Random.Range(500, 1000), Random.Range(300, 500), Random.Range(500, 1000));
-        } else if (thrown && hasLanded)
-        {
-            Reset();
         }
+        //else if (thrown && hasLanded)
+        //{
+        //    Reset();
+        //}
     }
 
     private void Reset()
@@ -98,11 +99,9 @@ public class Dice : MonoBehaviour
         {
             if (diceSide.OnGround())
             {
-                diceValue = diceSide.GetSideValue();
-                Debug.Log("Dice value: " + diceValue);
-
                 // Inform dice controller.
-                diceController.DiceFallen(diceValue);
+                
+                diceController.DiceFallen(diceValue = diceSide.GetSideValue());
             }
         }
     }

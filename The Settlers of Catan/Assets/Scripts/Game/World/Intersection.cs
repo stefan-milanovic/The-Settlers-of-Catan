@@ -16,6 +16,9 @@ public class Intersection : MonoBehaviour
     private bool available = true;
     private bool rippleActive = false;
 
+    private bool hasSettlement = false;
+    private bool hasCity = false;
+
     // private GamePlayer owner = null;
 
     private GameObject rippleSystem;
@@ -29,7 +32,7 @@ public class Intersection : MonoBehaviour
 
     private int surroundingPathsLength;
 
-    private int ownerId;
+    private int ownerId = 0; // at the start, no one owns this intersection
 
     // Start is called before the first frame update
     void Start()
@@ -51,6 +54,21 @@ public class Intersection : MonoBehaviour
     public bool IsAvailable()
     {
         return available;
+    }
+
+    public bool HasSettlement()
+    {
+        return hasSettlement;
+    }
+
+    public bool HasCity()
+    {
+        return hasCity;
+    }
+
+    public int GetOwnerId()
+    {
+        return ownerId;
     }
 
     public void ToggleRipple()
@@ -87,6 +105,7 @@ public class Intersection : MonoBehaviour
         this.ownerId = ownerId;
 
         available = false; // chain this to neighbouring intersections
+        hasSettlement = true;
         
     }
 

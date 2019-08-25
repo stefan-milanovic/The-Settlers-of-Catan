@@ -18,7 +18,7 @@ public class BoardGenerator : MonoBehaviour
         "Mountain", "Mountain","Mountain"
     };
 
-    private readonly short[] numberPool =
+    private readonly int[] numberPool =
     {
         2,
         3, 3,
@@ -64,7 +64,7 @@ public class BoardGenerator : MonoBehaviour
         // Start hex generation.
 
         List<string> terrainPoolCopy = terrainPool.OfType<string>().ToList();
-        List<short> numberPoolCopy = numberPool.OfType<short>().ToList();
+        List<int> numberPoolCopy = numberPool.OfType<int>().ToList();
 
         int terrainPoolSize = terrainPool.Length;
         int numberPoolSize = numberPool.Length;
@@ -86,7 +86,7 @@ public class BoardGenerator : MonoBehaviour
             else
             {
                 int numberIndex = Random.Range(0, numberPoolSize);
-                short chosenNumber = numberPoolCopy[numberIndex];
+                int chosenNumber = numberPoolCopy[numberIndex];
                 numberPoolCopy.RemoveAt(numberIndex);
                 hex.SetNumber(chosenNumber);
                 numberPoolSize--;
