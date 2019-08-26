@@ -12,7 +12,7 @@ public class DiceController : MonoBehaviour
     GamePlayer player;
 
     [SerializeField]
-    private Dice[] die;
+    private Dice[] dice;
 
     // Start is called before the first frame update
     void Start()
@@ -33,9 +33,9 @@ public class DiceController : MonoBehaviour
 
     public void RollDice()
     {
-        foreach (Dice dice in die)
+        foreach (Dice die in dice)
         {
-            dice.RollDice();
+            die.RollDice();
         }
     }
 

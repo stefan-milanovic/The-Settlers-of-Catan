@@ -356,28 +356,28 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
         busy = true;
 
-        InventoryUIController inventoryUIController = inventory.GetInventoryUIController();
-        inventoryUIController.EnableRolling();
+        BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
+        bottomPanel.EnableRolling();
 
         eventTextController.SetText(EventTextController.TextCode.PRE_DICE_ROLL, PhotonNetwork.LocalPlayer);
     }
 
     protected void EnableEndingTurn()
     {
-        InventoryUIController inventoryUIController = inventory.GetInventoryUIController();
-        inventoryUIController.EnableEndingTurn();
+        BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
+        bottomPanel.EnableEndingTurn();
     }
 
     protected void DisableEndingTurn()
     {
-        InventoryUIController inventoryUIController = inventory.GetInventoryUIController();
-        inventoryUIController.DisableEndingTurn();
+        BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
+        bottomPanel.DisableEndingTurn();
 
     }
     protected void DisableRollDiceButton()
     {
-        InventoryUIController inventoryUIController = inventory.GetInventoryUIController();
-        inventoryUIController.DisableRollDiceButton();
+        BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
+        bottomPanel.DisableRollDiceButton();
     }
     
     public void WaitForDiceResult(int diceValue)

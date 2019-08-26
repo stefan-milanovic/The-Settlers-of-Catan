@@ -36,30 +36,37 @@ public class Inventory : MonoBehaviour
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };
 
+    private Card[] cards = new Card[UNIT_ARRAY_SIZE];
+
     private const int START_ROAD_COUNT = 15;
     private const int START_SETTLEMENT_COUNT = 5;
     private const int START_CITY_COUNT = 4;
-
+    
     private int playerScore = 0;
     private int playerHiddenScore = 0;
-
-    private InventoryUIController inventoryUIController;
     
-
     public void Start()
     {
-        inventoryUIController = GameObject.Find("InventoryUIController").GetComponent<InventoryUIController>();
-
-        for (int i = 0; i < UNIT_ARRAY_SIZE; i++)
+        // Connect to cards.
+        Card[] cardList = FindObjectsOfType<Card>();
+        foreach (Card card in cardList)
         {
-            inventoryUIController.UpdateInventoryUIText((UnitCode)i, stock[i]);
+            card.SetInventory(this);
+            card.UpdateCard(stock[(int)card.GetUnitCode()]);
+            cards[(int)card.GetUnitCode()] = card;
         }
-    }
 
-    public InventoryUIController GetInventoryUIController()
-    {
-        return inventoryUIController;
+        //inventoryUIController = GameObject.Find("InventoryUIController").GetComponent<InventoryUIController>();
+
+        //inventoryUIController.SetInventory(this);
+
+        //for (int i = 0; i < UNIT_ARRAY_SIZE; i++)
+        //{
+        //    inventoryUIController.UpdateInventoryUIText((UnitCode)i, stock[i]);
+        //}
     }
+    
+    public int[] getStock() { return stock; }
 
     public void TakeFromPlayer(UnitCode unit, int amount)
     {
@@ -71,8 +78,11 @@ public class Inventory : MonoBehaviour
 
         stock[(int)unit] -= amount;
 
+        cards[(int)unit].UpdateCard(stock[(int)unit]);
+
+        UpdateConstructionCards();
+
         UpdatePlayerScore();
-        inventoryUIController.UpdateInventoryUIText(unit, stock[(int)unit]);
     }
 
     public void GiveToPlayer(UnitCode unit, int amount)
@@ -80,8 +90,11 @@ public class Inventory : MonoBehaviour
 
         stock[(int)unit] += amount;
 
+        cards[(int)unit].UpdateCard(stock[(int)unit]);
+
+        UpdateConstructionCards();
+
         UpdatePlayerScore();
-        inventoryUIController.UpdateInventoryUIText(unit, stock[(int)unit]);
     }
 
     private void UpdatePlayerScore()
@@ -95,4 +108,12 @@ public class Inventory : MonoBehaviour
         
 
     }   
+
+    private void UpdateConstructionCards()
+    {
+        for (UnitCode i = UnitCode.ROAD; i <= UnitCode.CITY; i++)
+        {
+            cards[(int)i].UpdateCard(stock[(int)i]);
+        }
+    }
 }

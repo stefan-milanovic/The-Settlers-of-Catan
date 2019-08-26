@@ -122,6 +122,23 @@ public class HumanPlayer : GamePlayer
             if (currentPhase == Phase.TRADE_BUILD)
             {
                 // Wait for action.
+                
+                //if (roadCardSelected)
+                //{
+                //    FindSelectablePaths();
+                //    SelectRoadLocation();
+                //}
+
+                //if (settlementCardSelected)
+                //{
+                //    FindSelectableIntersections();
+                //    SelectSettlementLocation();
+                //}
+
+                //if (cityCardSelected)
+                //{
+                //    // city logic
+                //}
             }
         }
         

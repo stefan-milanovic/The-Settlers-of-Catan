@@ -17,7 +17,14 @@ public class BottomPanel : MonoBehaviour
     };
 
     PanelCode currentOpenPanel = PanelCode.RESOURCES;
-    
+
+    [SerializeField]
+    private Button rollDiceButton;
+
+    [SerializeField]
+    private Button endTurnButton;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -125,5 +132,87 @@ public class BottomPanel : MonoBehaviour
 
     }
 
-    
+
+    #region Bottom Right Buttons
+
+    public void DisplayRollDiceButton()
+    {
+        rollDiceButton.gameObject.SetActive(true);
+    }
+
+    public void HideRollDiceButton()
+    {
+        rollDiceButton.gameObject.SetActive(false);
+    }
+
+    public void EnableRollDiceButton()
+    {
+        rollDiceButton.interactable = true;
+    }
+
+    public void DisableRollDiceButton()
+    {
+        rollDiceButton.interactable = false;
+    }
+
+    public void DisplayEndTurnButton()
+    {
+        endTurnButton.gameObject.SetActive(true);
+    }
+
+    public void HideEndTurnButton()
+    {
+        endTurnButton.gameObject.SetActive(false);
+    }
+
+    public void EnableEndTurnButton()
+    {
+        endTurnButton.interactable = true;
+    }
+
+    public void DisableEndTurnButton()
+    {
+        endTurnButton.interactable = false;
+    }
+
+    public void EnableRolling()
+    {
+
+        if (endTurnButton.IsActive())
+        {
+            HideEndTurnButton();
+        }
+
+        if (!rollDiceButton.IsActive())
+        {
+            DisplayRollDiceButton();
+        }
+
+        EnableRollDiceButton();
+
+
+    }
+
+    public void EnableEndingTurn()
+    {
+        if (rollDiceButton.IsActive())
+        {
+            HideRollDiceButton();
+        }
+
+        if (!endTurnButton.IsActive())
+        {
+            DisplayEndTurnButton();
+        }
+
+        EnableEndTurnButton();
+    }
+
+    public void DisableEndingTurn()
+    {
+        DisableEndTurnButton();
+    }
+
+    #endregion
+
 }

@@ -43,7 +43,6 @@ public class Dice : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(gameObject.name + " - hasLanded = " + hasLanded + ", thrown = " + thrown);
         if (rigidBody.IsSleeping() && !hasLanded && thrown)
         {
             hasLanded = true;
