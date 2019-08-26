@@ -26,6 +26,7 @@ public class HumanPlayer : GamePlayer
 
             // Instantiate local inventory.
             inventory = Instantiate(inventoryPrefab).GetComponent<Inventory>();
+            inventory.SetPlayer(this);
 
             // Fill in local intersection list.
             intersections = GameObject.FindGameObjectsWithTag("Intersection");
@@ -119,20 +120,18 @@ public class HumanPlayer : GamePlayer
                 // Waiting for dice to be rolled. When they're rolled the WaitForDiceResult() method of GamePlayer will be called.
             }
 
-            if (currentPhase == Phase.TRADE_BUILD)
+            if (currentPhase == Phase.TRADE_BUILD_IDLE)
             {
                 // Wait for action.
                 
                 //if (roadCardSelected)
                 //{
-                //    FindSelectablePaths();
-                //    SelectRoadLocation();
+                
                 //}
 
                 //if (settlementCardSelected)
                 //{
-                //    FindSelectableIntersections();
-                //    SelectSettlementLocation();
+                
                 //}
 
                 //if (cityCardSelected)
@@ -140,10 +139,39 @@ public class HumanPlayer : GamePlayer
                 //    // city logic
                 //}
             }
+            
+            if (currentPhase == Phase.BUILDING)
+            {
+                switch (selectedConstructionCard.GetUnitCode())
+                {
+                    case Inventory.UnitCode.ROAD:
+                        FindSelectablePaths();
+                        SelectRoadLocation();
+                        break;
+                    case Inventory.UnitCode.SETTLEMENT:
+                        FindSelectableIntersections();
+                        SelectSettlementLocation();
+                        break;
+                    case Inventory.UnitCode.CITY:
+                        FindSelectableSettlements();
+                        SelectCityLocation();
+                        break;
+                }
+            }
+
+            if (currentPhase == Phase.STOP_BUILDING)
+            {
+
+                TurnOffIndicators();
+                selectedConstructionCard = null;
+                currentPhase = Phase.TRADE_BUILD_IDLE;
+            }
         }
         
     }
 
+
+    
 
     protected void SelectSettlementLocation()
     {
@@ -153,7 +181,7 @@ public class HumanPlayer : GamePlayer
             
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                Debug.Log(hit.collider.name);
+                // Debug.Log(hit.collider.name);
                 if (hit.collider.tag == "IntersectionCollider") // click on another player, enemy, building
                 {
                     Intersection i = hit.collider.transform.parent.GetComponent<Intersection>();
@@ -169,8 +197,6 @@ public class HumanPlayer : GamePlayer
                         myIntersections.Add(i);
 
                         // Move on to next phase.
-                        busy = false;
-
                         if (currentTurn == 1)
                         {
                             currentPhase = Phase.FIRST_ROAD_PLACEMENT;
@@ -179,7 +205,12 @@ public class HumanPlayer : GamePlayer
                         {
                             currentPhase = Phase.SECOND_ROAD_PLACEMENT;
                         }
-
+                        else
+                        {
+                            // Pay resources
+                            inventory.PaySettlementConstruction();
+                            currentPhase = Phase.TRADE_BUILD_IDLE;
+                        }
                     }
                 }
             }
@@ -195,7 +226,7 @@ public class HumanPlayer : GamePlayer
 
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                Debug.Log(hit.collider.name);
+                //Debug.Log(hit.collider.name);
                 if (hit.collider.tag == "Path") // click on another player, enemy, building
                 {
 
@@ -205,24 +236,41 @@ public class HumanPlayer : GamePlayer
                     {
                         TogglePathBlink();
 
-                        p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
-
-                        inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
-
-                        myPaths.Add(p);
-
-                        busy = false;
-
                         if (currentTurn == 1)
                         {
                             currentPhase = Phase.SECOND_SETTLEMENT_PLACEMENT;
+
+                            p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
+
+                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+
+                            myPaths.Add(p);
+
+                            EndLocalTurn();
                         } else if (currentTurn == 2)
                         {
                             currentPhase = Phase.ROLL_DICE;
-                        }
-                        
 
-                        EndLocalTurn();
+                            p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
+
+                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+
+                            myPaths.Add(p);
+
+                            EndLocalTurn();
+                        }
+                        else
+                        {
+                            // Pay resources
+                            inventory.PayRoadConstruction();
+                            currentPhase = Phase.TRADE_BUILD_IDLE;
+
+                            p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
+
+                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+
+                            myPaths.Add(p);
+                        }
                     }
                     
                 }
@@ -230,5 +278,41 @@ public class HumanPlayer : GamePlayer
 
         }
     }
-    
+
+    protected void SelectCityLocation()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                //Debug.Log(hit.collider.name);
+                if (hit.collider.tag == "IntersectionCollider") // click on another player, enemy, building
+                {
+                    Intersection i = hit.collider.transform.parent.GetComponent<Intersection>();
+
+                    foreach (Intersection mySettlement in selectableSettlements)
+                    {
+                        if (i == mySettlement)
+                        {
+
+                            Debug.Log("Creating city");
+
+                            ToggleSettlementRipples();
+
+                            i.ConstructCity();
+
+                            inventory.GiveToPlayer(Inventory.UnitCode.SETTLEMENT, 1); // Return 1 settlement to the player's stock.
+                            inventory.TakeFromPlayer(Inventory.UnitCode.CITY, 1); // Take 1 city from the player's stock.
+                            
+                            inventory.PayCityConstruction();
+                            currentPhase = Phase.TRADE_BUILD_IDLE;
+                        }
+                    }
+                }
+            }
+
+        }
+    }
 }

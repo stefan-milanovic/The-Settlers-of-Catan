@@ -19,6 +19,14 @@ public class WorldPath : MonoBehaviour
 
     private PhotonView photonView;
 
+    // ADD SOON
+    private Intersection[] intersections;
+
+    // WHEN LOOKING FOR PATHS WHERE PLAYER CAN BUILD A ROAD
+    // ASK:
+    // 1) player's settlements - all adjacent available roads
+    // 2) player's roads -- all available roads connected to this road (we can find that by going through the intersections and then checking if their surroundingRoads are available)
+
     // Start is called before the first frame update
     void Start()
     {

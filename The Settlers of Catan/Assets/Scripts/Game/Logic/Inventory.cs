@@ -31,7 +31,7 @@ public class Inventory : MonoBehaviour
     
     private int[] stock =
     {
-        0, 0, 0, 0, 0,
+        10, 10, 10, 10, 10,
         0, 0, 0, 0, 0,
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };
@@ -44,6 +44,8 @@ public class Inventory : MonoBehaviour
     
     private int playerScore = 0;
     private int playerHiddenScore = 0;
+
+    private GamePlayer myPlayer;
     
     public void Start()
     {
@@ -66,6 +68,14 @@ public class Inventory : MonoBehaviour
         //}
     }
     
+    public void SetPlayer(GamePlayer p)
+    {
+        myPlayer = p;
+    }
+
+    public GamePlayer GetPlayer() { return myPlayer; }
+
+
     public int[] getStock() { return stock; }
 
     public void TakeFromPlayer(UnitCode unit, int amount)
@@ -115,5 +125,28 @@ public class Inventory : MonoBehaviour
         {
             cards[(int)i].UpdateCard(stock[(int)i]);
         }
+    }
+
+    public void PayRoadConstruction()
+    {
+
+        TakeFromPlayer(UnitCode.BRICK, 1);
+        TakeFromPlayer(UnitCode.LUMBER, 1);
+
+        // cards[(int)UnitCode.ROAD].UpdateCard()
+    }
+
+    public void PaySettlementConstruction()
+    {
+        TakeFromPlayer(UnitCode.BRICK, 1);
+        TakeFromPlayer(UnitCode.LUMBER, 1);
+        TakeFromPlayer(UnitCode.GRAIN, 1);
+        TakeFromPlayer(UnitCode.WOOL, 1);
+    }
+
+    public void PayCityConstruction()
+    {
+        TakeFromPlayer(UnitCode.GRAIN, 2);
+        TakeFromPlayer(UnitCode.ORE, 3);
     }
 }

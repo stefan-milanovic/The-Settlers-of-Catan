@@ -28,7 +28,7 @@ public class BottomPanel : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        DisplayPanel("ResourcePanel", true);
     }
 
     // Update is called once per frame
@@ -107,6 +107,11 @@ public class BottomPanel : MonoBehaviour
         GameObject panel = GameObject.Find(panelName);
 
         panel.GetComponent<CanvasGroup>().alpha = (visibility) ? 1 : 0;
+
+        // if it's a card panel, show/hide its cards
+
+        CardPanel cardPanel = panel.GetComponent<CardPanel>();
+        cardPanel.SetVisible(visibility);
     }
 
     private void ToggleButton(string buttonTag, bool interactable)

@@ -12,19 +12,23 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 {
 
     // Phases
-    protected enum Phase
+    public enum Phase
     {
         FIRST_SETTLEMENT_PLACEMENT,
         FIRST_ROAD_PLACEMENT,
         SECOND_SETTLEMENT_PLACEMENT,
         SECOND_ROAD_PLACEMENT,
         ROLL_DICE,
-        TRADE_BUILD,
+        TRADE_BUILD_IDLE,
+        BUILDING,
+        STOP_BUILDING,
+        TRADING
     }
 
     protected enum MessageCode
     {
-        RESOURCE_INCOME
+        RESOURCE_INCOME,
+        TRADE_REQUEST
     }
 
     
@@ -42,6 +46,7 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     protected int currentTurn;
 
     protected List<Intersection> selectableIntersections = new List<Intersection>();
+    protected List<Intersection> selectableSettlements = new List<Intersection>();
     protected List<WorldPath> selectablePaths = new List<WorldPath>();
 
     protected GameObject[] intersections;
@@ -69,6 +74,8 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
     protected Player currentPlayer = null;
 
+    protected Card selectedConstructionCard = null;
+
     // UI
 
     protected Button rollDiceButton;
@@ -92,6 +99,29 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     void Update()
     {
         
+    }
+
+    public Phase GetPhase() { return currentPhase;  }
+    public void SetPhase(Phase phase) { currentPhase = phase; }
+
+    public void SetSelectedConstructionCard(Card card) { selectedConstructionCard = card; }
+    public Card GetSelectedConstructionCard() { return selectedConstructionCard; }
+
+    public void TurnOffIndicators()
+    {
+        switch (selectedConstructionCard.GetUnitCode())
+        {
+            case Inventory.UnitCode.ROAD:
+                TogglePathBlink();
+                break;
+            case Inventory.UnitCode.SETTLEMENT:
+                ToggleIntersectionRipples();
+                break;
+            case Inventory.UnitCode.CITY:
+                ToggleSettlementRipples();
+                break;
+        }
+
     }
 
     protected void ConnectToTurnManager()
@@ -147,6 +177,8 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
         {
             setUpPhase = false;
             currentPhase = Phase.ROLL_DICE;
+            myTurn = true;
+
         } else
         {
             currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(1);
@@ -205,7 +237,9 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
                     inventory.GiveToPlayer(resourceType, amount);
                 }
                 break;
+            case MessageCode.TRADE_REQUEST:
 
+                break;
         }
         
     }
@@ -329,6 +363,25 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
     }
 
+    protected void FindSelectableSettlements()
+    {
+        if (busy) return;
+
+        busy = true;
+
+        selectableSettlements = new List<Intersection>();
+
+        foreach (Intersection i in myIntersections)
+        {
+            if (i.HasSettlement())
+            {
+                selectableSettlements.Add(i);
+                i.ToggleRipple();
+            }
+        }
+        
+    }
+    
     protected void ToggleIntersectionRipples()
     {
         foreach (GameObject intersection in intersections)
@@ -339,6 +392,7 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
                 i.ToggleRipple();
             }
         }
+        busy = false;
     }
 
     protected void TogglePathBlink()
@@ -347,6 +401,17 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
         {
             path.ToggleBlink();
         }
+        busy = false;
+    }
+
+    protected void ToggleSettlementRipples()
+    {
+        Debug.Log("toggling settlement ripples, selectablesettlementscount = " + selectableSettlements.Count);
+        foreach (Intersection i in selectableSettlements)
+        {
+            i.ToggleRipple();
+        }
+        busy = false;
     }
 
     protected void EnableRolling()
@@ -394,11 +459,12 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
         DisableRollDiceButton();
         EnableEndingTurn();
 
-        currentPhase = Phase.TRADE_BUILD;
+        currentPhase = Phase.TRADE_BUILD_IDLE;
     }
 
     public void EndTurnButtonPress()
     {
+        Debug.Log("end turn button pressed");
         DisableEndingTurn();
         EndLocalTurn();
     }

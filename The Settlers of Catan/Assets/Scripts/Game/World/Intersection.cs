@@ -15,7 +15,6 @@ public class Intersection : MonoBehaviour
     
     private bool available = true;
     private bool rippleActive = false;
-
     private bool hasSettlement = false;
     private bool hasCity = false;
 
@@ -91,6 +90,10 @@ public class Intersection : MonoBehaviour
         
     }
 
+    public void ConstructCity()
+    {
+        photonView.RPC("RPCConstructCity", RpcTarget.All);
+    }
 
     [PunRPC]
     private void RPCConstructSettlement(int ownerId)
@@ -107,6 +110,17 @@ public class Intersection : MonoBehaviour
         available = false; // chain this to neighbouring intersections
         hasSettlement = true;
         
+    }
+
+    [PunRPC]
+    private void RPCConstructCity()
+    {
+
+        settlement.SetActive(false);
+        city.SetActive(true);
+
+        hasSettlement = false;
+        hasCity = true;
     }
 
     public List<WorldPath> GetAvailablePaths()
