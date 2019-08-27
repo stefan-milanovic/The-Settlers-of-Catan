@@ -16,16 +16,11 @@ public class PlayerSlot : MonoBehaviour
 
     [SerializeField]
     private TextMeshProUGUI score;
-
-
-    private PhotonView photonView;
-
-    private int leaderboardPosition;
+   
 
     // Start is called before the first frame update
     void Start()
     {
-        photonView = GetComponent<PhotonView>();
     }
 
     // Update is called once per frame
@@ -36,7 +31,6 @@ public class PlayerSlot : MonoBehaviour
 
     public void SetPlayerText(string playerName)
     {
-        Debug.Log("setting playerName " + playerName);
         player.text = playerName;
     }
 
@@ -45,33 +39,24 @@ public class PlayerSlot : MonoBehaviour
         score.text = "" + newScore;
     }
 
-    public void SetPlayerPosition(int newPosition)
+    public void DisplayPosition()
     {
-        position.text = "#" + (newPosition + 1);
+        position.gameObject.SetActive(true);
     }
 
-    public void SetPlayer(int playerActorId, int position)
+    public void SetPlayer(int playerId)
     {
-        photonView.RPC("RPCSetPlayer", RpcTarget.All, playerActorId, position);
-    }
+        Player player = PhotonNetwork.CurrentRoom.GetPlayer(playerId);
 
-    
-
-    [PunRPC]
-    public void RPCSetPlayer(int playerActorId, int position)
-    {
-        Player player = PhotonNetwork.CurrentRoom.GetPlayer(playerActorId);
-
+        Debug.Log(player.ActorNumber);
         string username = player.CustomProperties["username"] as string;
         string colour = player.CustomProperties["colour"] as string;
 
-        SetPlayerText("<color=" + colour + ">" + username + "</color>");
 
+        DisplayPosition();
+        SetPlayerText("<color=" + colour + ">" + username + "</color>");
         SetPlayerScore(0);
         
-        SetPlayerPosition(leaderboardPosition = position);
-
-        // set slot owner to player
-        
     }
+    
 }

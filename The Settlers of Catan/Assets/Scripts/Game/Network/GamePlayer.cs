@@ -8,7 +8,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
+public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 {
 
     // Phases
@@ -30,7 +30,6 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
         RESOURCE_INCOME,
         TRADE_REQUEST
     }
-
     
     // during dice roll phase the player can activate a development card from earlier
     protected Phase currentPhase = Phase.FIRST_SETTLEMENT_PLACEMENT;
@@ -50,10 +49,7 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     protected List<WorldPath> selectablePaths = new List<WorldPath>();
 
     protected GameObject[] intersections;
-    
-    // TEMP
-    public ChatController chat;
-
+   
     // Every player has their own inventory of cards, resources, and buildings.
     protected Inventory inventory;
 
@@ -76,6 +72,9 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
     protected Card selectedConstructionCard = null;
 
+    protected LeaderboardController leaderboardController;
+    protected TradeController tradeController;
+
     // UI
 
     protected Button rollDiceButton;
@@ -90,10 +89,16 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     {
 
         rollDiceButton = GameObject.Find("RollDiceButton").GetComponent<Button>();
-        
-        
-        
     }
+
+    public override void OnEnable()
+    {
+        base.OnEnable();
+
+        photonView = GetComponent<PhotonView>();
+    }
+
+    public Player GetPhotonPlayer() { return photonView.Owner; }
 
     // Update is called once per frame
     void Update()
@@ -130,8 +135,31 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
         this.turnManager.TurnManagerListener = this;
         this.turnManager.RegisterPlayer();
     }
- 
-   
+
+    public void ClaimLeaderboardSlot()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            string key = "leaderboardSlot" + (i + 1);
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
+            {
+                [key] = PhotonNetwork.LocalPlayer.ActorNumber
+            },
+            new ExitGames.Client.Photon.Hashtable
+            {
+                [key] = 0
+            });
+
+            if ((int)PhotonNetwork.CurrentRoom.CustomProperties[key] == 0)
+            {
+                // This slot will be taken -- leave the loop.
+                Debug.Log("Player " + PhotonNetwork.LocalPlayer.ActorNumber + " got slot: " + key);
+                break;
+            }
+        }
+    }
+
     public Inventory GetInventory()
     {
         return inventory;
@@ -140,24 +168,35 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
     #region IPunTurnManagerCallbacks
 
-    // Called from TurnManager - Connectors call
+    // Called from TurnManager - Each player gets this called by their local turn manager
     public void OnTurnBegins(int turn)
     {
-        
         Debug.Log("Turn " + turn + " beginning globally.");
-
-        chat.AddMessageToSelectedChannel(PhotonNetwork.LocalPlayer.NickName + "(gameobject locally: " + gameObject.name + ") start turn globally.");
-
+        
         currentTurn = turn;
         
         if (turn == 1)
         {
+
+            
+
             currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(1);
 
             setUpPhase = true;
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
-                chat.AddMessageToSelectedChannel(PhotonNetwork.LocalPlayer.NickName + "starting turn in turn1");
+
+                // Init trade.
+                tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
+                tradeController.Init();
+
+                // Claim an empty leaderboard slot.
+                ClaimLeaderboardSlot();
+
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
+
                 myTurn = true;
             }
         }
@@ -169,15 +208,24 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
                 Debug.Log("In turn2 the player to play is: " + PhotonNetwork.LocalPlayer.ActorNumber + ", name = " + PhotonNetwork.LocalPlayer.NickName);
-                chat.AddMessageToSelectedChannel(PhotonNetwork.LocalPlayer.NickName + "starting turn in turn2");
                 myTurn = true;
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
             }
 
         } else if (turn == 3)
         {
-            setUpPhase = false;
-            currentPhase = Phase.ROLL_DICE;
-            myTurn = true;
+            
+            currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(1);
+            
+            if (PhotonNetwork.LocalPlayer == currentPlayer)
+            {
+                myTurn = true;
+                setUpPhase = false;
+                currentPhase = Phase.ROLL_DICE;
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
+            }
 
         } else
         {
@@ -185,9 +233,10 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
                 Debug.Log("In turn" + turn + " the player to play is: " + PhotonNetwork.LocalPlayer.ActorNumber + ", name = " + PhotonNetwork.LocalPlayer.NickName);
-                chat.AddMessageToSelectedChannel(PhotonNetwork.LocalPlayer.NickName + "starting turn in turn2");
                 myTurn = true;
                 currentPhase = Phase.ROLL_DICE;
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
             }
         }
         
@@ -196,7 +245,6 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     public void EndLocalTurn()
     {
         Debug.Log("Player id = " + PhotonNetwork.LocalPlayer.ActorNumber + " ending their turn.");
-        chat.AddMessageToSelectedChannel(PhotonNetwork.LocalPlayer.NickName + "ending turn " + currentTurn);
         myTurn = false;
         
 
@@ -208,12 +256,14 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     {
         
         Debug.Log("Turn " + turn + " completed globally.");
-
-        chat.AddMessageToSelectedChannel(PhotonNetwork.LocalPlayer.NickName + "acknowledges global completion");
         // check for gameover
 
         // start a new turn
-        turnManager.BeginTurn();
+        if (PhotonNetwork.IsMasterClient)
+        {
+            turnManager.BeginTurn();
+        }
+       
     }
 
     // Gets called when another player makes a move.
@@ -226,8 +276,9 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
         switch (moveCode)
         {
-            // If I am the player who should receive the resources, update my inventory. In this case, turn and sender don't matter.
+            
             case MessageCode.RESOURCE_INCOME:
+                // If I am the player who should receive the resources, update my inventory. In this case, turn and sender don't matter.
                 int playerId = moveMessage[1];
                 Inventory.UnitCode resourceType = (Inventory.UnitCode)moveMessage[2];
                 int amount = moveMessage[3];
@@ -238,7 +289,13 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
                 }
                 break;
             case MessageCode.TRADE_REQUEST:
+                // Check if I am the recepient.
+                int senderId = moveMessage[1];
 
+                if (senderId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    // Display Accept/Decline message locally.
+                }
                 break;
         }
         
@@ -249,8 +306,12 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
     public void OnPlayerFinished(Player player, int turn, object move)
     {
         // Player <player> has ended their turn on their machine. End it locally as well.
-        
-        // start the turn for the next player
+
+        // Start the turn for the next player only if there's players who haven't yet played it.
+
+        if (turnManager.IsCompletedByAll) { return; }
+
+
         Player nextPlayer;
 
         if (currentTurn != 2)
@@ -271,13 +332,40 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
         this.currentPlayer = nextPlayer;
         if (PhotonNetwork.LocalPlayer == nextPlayer)
         {
-            myTurn = true;
+            if (turn == 1)
+            {
+                // Init trade.
+                tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
+                tradeController.Init();
 
-            if (turn == 3)
+                // Claim an empty leaderboard slot.
+                ClaimLeaderboardSlot();
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
+                setUpPhase = true;
+                myTurn = true;
+            }
+            else if (turn == 2)
+            {
+                myTurn = true;
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
+            }
+            else if (turn == 3)
             {
                 setUpPhase = false;
+                currentPhase = Phase.ROLL_DICE;
+                myTurn = true;
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
             }
-
+            else
+            {
+                myTurn = true;
+                currentPhase = Phase.ROLL_DICE;
+                GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
+                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+            }
         }
     }
 
@@ -533,8 +621,12 @@ public class GamePlayer : MonoBehaviour, IPunTurnManagerCallbacks
 
     }
 
-    public void TimedTextCallback()
+    public void SendTradeRequest(Player recepient)
     {
-
+        // send request via
+        int[] tradeRequestMessage = new int[2];
+        tradeRequestMessage[0] = (int)MessageCode.TRADE_REQUEST;
+        tradeRequestMessage[1] = recepient.ActorNumber;
+        turnManager.SendMove(tradeRequestMessage, false);
     }
 }

@@ -57,15 +57,7 @@ public class Inventory : MonoBehaviour
             card.UpdateCard(stock[(int)card.GetUnitCode()]);
             cards[(int)card.GetUnitCode()] = card;
         }
-
-        //inventoryUIController = GameObject.Find("InventoryUIController").GetComponent<InventoryUIController>();
-
-        //inventoryUIController.SetInventory(this);
-
-        //for (int i = 0; i < UNIT_ARRAY_SIZE; i++)
-        //{
-        //    inventoryUIController.UpdateInventoryUIText((UnitCode)i, stock[i]);
-        //}
+        
     }
     
     public void SetPlayer(GamePlayer p)

@@ -7,8 +7,6 @@ using UnityEngine;
 public class LeaderboardController : MonoBehaviour
 {
 
-    private int freeSlot = 0;
-
     private readonly double[] yMins = { 0.6, 0.4, 0.2, 0 };
     private readonly double[] yMaxs = { 0.8, 0.6, 0.4, 0.2 };
 
@@ -22,6 +20,7 @@ public class LeaderboardController : MonoBehaviour
     {
         photonView = GetComponent<PhotonView>();
         
+
     }
 
     // Update is called once per frame
@@ -30,51 +29,41 @@ public class LeaderboardController : MonoBehaviour
         
     }
 
+    
+    public void Init()
+    {
+        //for (int i = 0; i < 4; i++)
+        //{
+        //    string key = "leaderboardSlot" + (i + 1);
+            
+        //    if ((int)PhotonNetwork.CurrentRoom.CustomProperties[key] != 0)
+        //    {
+        //        // leaderboard manager.setslot(playerid)
+        //        TakeSlot(i, (int)PhotonNetwork.CurrentRoom.CustomProperties[key]);
+
+        //    }
+        //}
+    }
+
     public void UpdateLeaderboard()
     {
 
     }
 
-    public void RegisterPlayer(Player player)
+    public void TakeSlot(int slotId, int playerId)
     {
-
-        int freeSlot = GetFreeSlot();
-        photonView.RPC("RPCRegisterPlayer", RpcTarget.AllBufferedViaServer, player.ActorNumber, freeSlot);
-    }
-
-    // Every leaderboardcontroller should call this 4 times.
-    [PunRPC]
-    private void RPCRegisterPlayer(int playerActorNumber, int freeSlot)
-    {
-        Debug.Log("registering player: " + playerActorNumber + ", free slot: " + freeSlot);
-
-        playerSlots[freeSlot].SetPlayer(playerActorNumber, freeSlot);
-    }
-    
-    private int GetFreeSlot()
-    {
-        bool llock = (bool) PhotonNetwork.CurrentRoom.CustomProperties["leaderboardLock"];
-
-        while (llock)
+        if (photonView.IsMine)
         {
-            llock = (bool)PhotonNetwork.CurrentRoom.CustomProperties["leaderboardLock"];
+
+            photonView.RPC("RPCTakeSlot", RpcTarget.All, slotId, playerId);
         }
+    }
 
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
-        {
-            ["leaderboardLock"] = true
-        });
+    [PunRPC]
+    private void RPCTakeSlot(int slotId, int playerId)
+    {
+        PlayerSlot slot = playerSlots[slotId];
 
-        int freeSlot = (int) PhotonNetwork.CurrentRoom.CustomProperties["leaderboardFreeSlot"];
-
-        Debug.Log("In getfreeslot() receieved freeslot: " + freeSlot);
-
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
-        {
-            ["leaderboardFreeSlot"] = freeSlot + 1,
-            ["leaderboardLock"] = false
-        });
-
-        return freeSlot;
+        slot.SetPlayer(playerId);
     }
 }

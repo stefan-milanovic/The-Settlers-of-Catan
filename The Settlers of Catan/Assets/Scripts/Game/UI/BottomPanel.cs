@@ -18,11 +18,16 @@ public class BottomPanel : MonoBehaviour
 
     PanelCode currentOpenPanel = PanelCode.RESOURCES;
 
+    private bool tradePanelOpen = false;
+
     [SerializeField]
     private Button rollDiceButton;
 
     [SerializeField]
     private Button endTurnButton;
+
+    [SerializeField]
+    private GameObject tradePanel;
 
 
     // Start is called before the first frame update
@@ -59,7 +64,8 @@ public class BottomPanel : MonoBehaviour
 
     public void OpenTradeTab()
     {
-
+        // if (!alreadyTrading || !alreadyPending)
+        TogglePanel(PanelCode.TRADE);
     }
     
 
@@ -77,13 +83,31 @@ public class BottomPanel : MonoBehaviour
         string oldPanelName = oldPrefix + "Panel";
         string oldButtonTag = oldPrefix + "Button";
 
-        DisplayPanel(oldPanelName, false);
-        ToggleButton(oldButtonTag, true);
+        if (panelToOpen != PanelCode.TRADE)
+        {
+            DisplayPanel(oldPanelName, false);
+            ToggleButton(oldButtonTag, true);
 
-        DisplayPanel(panelName, true);
-        ToggleButton(buttonTag, false);
+            DisplayPanel(panelName, true);
+            ToggleButton(buttonTag, false);
 
-        currentOpenPanel = panelToOpen;
+            currentOpenPanel = panelToOpen;
+        }
+        else
+        {
+            if (!tradePanelOpen)
+            {
+                tradePanel.SetActive(tradePanelOpen = true);
+            }
+            else
+            {
+                tradePanel.SetActive(tradePanelOpen = false);
+            }
+        }
+
+        
+
+        
       
     }
 

@@ -1,4 +1,5 @@
 ﻿using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,6 +32,13 @@ public class DiceController : MonoBehaviour
         player = p;
     }
 
+    public void SetDiceOwner(Player p)
+    {
+        foreach (Dice die in dice)
+        {
+            die.SetOwner(p);
+        }
+    }
     public void RollDice()
     {
         foreach (Dice die in dice)

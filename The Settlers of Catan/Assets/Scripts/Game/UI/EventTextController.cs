@@ -10,6 +10,9 @@ public class EventTextController : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI eventText;
 
+    [SerializeField]
+    private TextMeshProUGUI currentPlayerText;
+
     private PhotonView photonView;
 
     private readonly string[] resourceColours =
@@ -69,6 +72,19 @@ public class EventTextController : MonoBehaviour
         
     }
     
+
+    public void SetCurrentPlayer(Player player)
+    {
+        photonView.RPC("RPCSetCurrentPlayer", RpcTarget.All, player.ActorNumber);
+    }
+
+    [PunRPC]
+    private void RPCSetCurrentPlayer(int playerId)
+    {
+        Player player = PhotonNetwork.CurrentRoom.GetPlayer(playerId);
+        currentPlayerText.text = "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>";
+    }
+
     public void AddToQueue(TextCode code, Player player, params object[] additionalParams)
     {
         string message = GetMessage(code, player.ActorNumber, additionalParams);

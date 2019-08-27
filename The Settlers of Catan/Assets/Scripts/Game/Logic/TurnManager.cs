@@ -47,7 +47,7 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// <summary>
     /// The duration of the turn in seconds.
     /// </summary>
-    public float TurnDuration = 120f;
+    public float TurnDuration = 180f;
 
     /// <summary>
     /// Gets the elapsed time in the current turn in seconds
@@ -94,7 +94,6 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
     #region MonoBehaviour CallBack
     
     void Start() {
-        // PhotonNetwork.AddCallbackTarget(this);
         
     }
 
@@ -213,9 +212,14 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
             case EvRegisterPlayer:
                 {
                     playersConnected++;
-                    if (playersConnected == 1)
+                    if (playersConnected == 2)
                     {
-                        this.StartGame();
+                        // Only the master client starts the game once all the players join.
+                        if (PhotonNetwork.IsMasterClient)
+                        {
+                            this.StartGame();
+                        }
+                        
                     }
                    break;
                 }
@@ -248,6 +252,9 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
         if (propertiesThatChanged.ContainsKey("Turn"))
         {
             _isOverCallProcessed = false;
+
+            // The turn number is set globally.
+
             this.finishedPlayers.Clear();
             this.TurnManagerListener.OnTurnBegins(this.Turn);
         }

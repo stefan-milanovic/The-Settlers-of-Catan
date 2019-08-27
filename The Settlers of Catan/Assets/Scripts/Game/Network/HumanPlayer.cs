@@ -1,4 +1,5 @@
-﻿using Photon.Pun;
+﻿using ExitGames.Client.Photon;
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ public class HumanPlayer : GamePlayer
     // Start is called before the first frame update
     void Start()
     {
-        photonView = GetComponent<PhotonView>();
+        
         Init();
 
         eventTextController = GameObject.Find("EventTextController").GetComponent<EventTextController>();
@@ -18,8 +19,8 @@ public class HumanPlayer : GamePlayer
         if (photonView.IsMine)
         {
 
-            chat = GameObject.Find("ChatController").GetComponent<ChatController>();
-
+            // Connect to chat.
+            GameObject.Find("ChatController").GetComponent<ChatController>().JoinChat(PhotonNetwork.CurrentRoom.Name);
 
             // Connect to dice controller.
             GameObject.Find("DiceController").GetComponent<DiceController>().SetPlayer(this);
@@ -44,39 +45,61 @@ public class HumanPlayer : GamePlayer
             // delete when color is implemented
             if (colourHex == "")
             {
-                colourHex = "#123123";
+                Color myColor = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+
+                string hex = "#" + ColorUtility.ToHtmlStringRGB(myColor);
+                
+                colourHex = hex;
             }
 
             // set them room-wide
-            ExitGames.Client.Photon.Hashtable properties = new ExitGames.Client.Photon.Hashtable
+            PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
             {
                 ["username"] = this.username,
                 ["colour"] = this.colourHex
-            };
-            PhotonNetwork.LocalPlayer.SetCustomProperties(properties);
+            });
+
+            // Claim an empty leadeboard slot.
 
             // Connect to Turn Manager - ONLY LOCAL PLAYER CALLS THIS.
             ConnectToTurnManager();
 
-            // Claim an empty leaderboard slot.
 
-            GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().RegisterPlayer(PhotonNetwork.LocalPlayer);
-
-            // Connect to end turn button.
-
-
+            leaderboardController = GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>();
+            
+            
         }
-        else
+    }
+    
+
+    //
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+    {
+
+        if (photonView.IsMine)
         {
-            this.username = photonView.Owner.CustomProperties["username"] as string;
-            this.colourHex = photonView.Owner.CustomProperties["colour"] as string;
+            Debug.Log("properties that changed: " + propertiesThatChanged);
 
-            // delete when color is implemented
-            if (colourHex == "")
+            // When a player claims a slot.
+
+            if (propertiesThatChanged.Count == 1)
             {
-                colourHex = "#123123";
+                for (int i = 0; i < 4; i++)
+                {
+                    string key = "leaderboardSlot" + (i + 1);
+
+                    if (propertiesThatChanged.ContainsKey(key) && (int)propertiesThatChanged[key] != 0)
+                    {
+                        // leaderboard manager.setslot(playerid)
+                        leaderboardController.TakeSlot(i, (int)propertiesThatChanged[key]);
+
+                    }
+                }
             }
+            
         }
+        
+        
     }
 
     // Update is called once per frame

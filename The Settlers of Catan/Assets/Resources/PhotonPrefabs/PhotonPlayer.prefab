@@ -66,7 +66,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cc50d440361d72458f6eb0f9f6a4c1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chat: {fileID: 0}
   inventoryPrefab: {fileID: 1887940815657987129, guid: d512028f769c7574789e53b8b8b29241,
     type: 3}
   turnManagerPrefab: {fileID: 0}

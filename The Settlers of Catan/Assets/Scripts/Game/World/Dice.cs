@@ -1,4 +1,5 @@
 ﻿using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,11 +44,15 @@ public class Dice : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        if (!photonView.IsMine) { return; }
+        
         if (rigidBody.IsSleeping() && !hasLanded && thrown)
         {
             hasLanded = true;
             rigidBody.useGravity = false;
             SideValueCheck();
+            
         }
         else if (rigidBody.IsSleeping() && hasLanded && diceValue == 0)
         {
@@ -103,5 +108,10 @@ public class Dice : MonoBehaviour
                 diceController.DiceFallen(diceValue = diceSide.GetSideValue());
             }
         }
+    }
+
+    public void SetOwner(Player owner)
+    {
+        photonView.TransferOwnership(owner);
     }
 }

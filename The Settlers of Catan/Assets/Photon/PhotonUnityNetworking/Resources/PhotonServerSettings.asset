@@ -46,5 +46,7 @@ MonoBehaviour:
   - PunRegisterPlayer
   - RPCSetPlayer
   - RPCConstructCity
+  - RPCTakeSlot
+  - RPCSetCurrentPlayer
   DisableAutoOpenWizard: 1
   ShowSettings: 1

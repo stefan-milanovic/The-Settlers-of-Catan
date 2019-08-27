@@ -119,15 +119,28 @@ public class LobbyController : MonoBehaviourPunCallbacks
     
     public void CreateRoom(string roomName, string password)
     {
-
-        // Join room chat.
-
-        // ChatClient chatClient = new ChatClient(this);
-        
-
         RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = MAX_NUMBER_OF_PLAYERS };
 
         PhotonNetwork.CreateRoom(roomName, roomOps);
+    }
+
+    public override void OnCreatedRoom()
+    {
+        //PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
+        //{
+        //    ["leaderboardSlot1"] = 0,
+        //    ["leaderboardSlot2"] = 0,
+        //    ["leaderboardSlot3"] = 0,
+        //    ["leaderboardSlot4"] = 0
+        //},
+        //new ExitGames.Client.Photon.Hashtable
+        //{
+        //    ["leaderboardSlot1"] = 0,
+        //    ["leaderboardSlot2"] = 0,
+        //    ["leaderboardSlot3"] = 0,
+        //    ["leaderboardSlot4"] = 0
+        //}
+        //);
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
