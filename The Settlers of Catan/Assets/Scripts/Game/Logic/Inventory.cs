@@ -45,14 +45,19 @@ public class Inventory : MonoBehaviour
     private int playerScore = 0;
     private int playerHiddenScore = 0;
 
+    private List<HarbourPath.HarbourBonus> harbourBonuses = new List<HarbourPath.HarbourBonus>();
+
     private GamePlayer myPlayer;
     
     public void Start()
     {
-        // Connect to cards.
+        // Connect to inventory cards (do not initialise trade cards).
         Card[] cardList = FindObjectsOfType<Card>();
         foreach (Card card in cardList)
         {
+            if (card.gameObject.tag != "InventoryCard") { return; }
+
+            card.Init();
             card.SetInventory(this);
             card.UpdateCard(stock[(int)card.GetUnitCode()]);
             cards[(int)card.GetUnitCode()] = card;
@@ -141,4 +146,11 @@ public class Inventory : MonoBehaviour
         TakeFromPlayer(UnitCode.GRAIN, 2);
         TakeFromPlayer(UnitCode.ORE, 3);
     }
+
+    public void AddHarbourBonus(HarbourPath.HarbourBonus bonus)
+    {
+        harbourBonuses.Add(bonus);
+    }
+
+    public List<HarbourPath.HarbourBonus> GetHarbourBonuses() { return this.harbourBonuses; }
 }

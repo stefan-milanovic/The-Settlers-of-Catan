@@ -147,20 +147,6 @@ public class HumanPlayer : GamePlayer
             {
                 // Wait for action.
                 
-                //if (roadCardSelected)
-                //{
-                
-                //}
-
-                //if (settlementCardSelected)
-                //{
-                
-                //}
-
-                //if (cityCardSelected)
-                //{
-                //    // city logic
-                //}
             }
             
             if (currentPhase == Phase.BUILDING)
@@ -208,8 +194,8 @@ public class HumanPlayer : GamePlayer
                 if (hit.collider.tag == "IntersectionCollider") // click on another player, enemy, building
                 {
                     Intersection i = hit.collider.transform.parent.GetComponent<Intersection>();
-
-                    if (i.IsAvailable())
+                    
+                    if (i.IsAvailable() && selectableIntersections.Contains(i))
                     {
 
                         ToggleIntersectionRipples();
@@ -217,8 +203,14 @@ public class HumanPlayer : GamePlayer
                         
                         inventory.TakeFromPlayer(Inventory.UnitCode.SETTLEMENT, 1);
 
+                        if (i.OnHarbour(out HarbourPath.HarbourBonus? bonus))
+                        {
+                            inventory.AddHarbourBonus((HarbourPath.HarbourBonus)bonus);
+                        }
+
                         myIntersections.Add(i);
 
+                        
                         // Move on to next phase.
                         if (currentTurn == 1)
                         {
@@ -255,7 +247,7 @@ public class HumanPlayer : GamePlayer
 
                     WorldPath p = hit.collider.transform.GetComponent<WorldPath>();
 
-                    if (p.IsAvailable())
+                    if (p.IsAvailable() && selectablePaths.Contains(p))
                     {
                         TogglePathBlink();
 
@@ -272,7 +264,6 @@ public class HumanPlayer : GamePlayer
                             EndLocalTurn();
                         } else if (currentTurn == 2)
                         {
-                            currentPhase = Phase.ROLL_DICE;
 
                             p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
 
@@ -281,6 +272,7 @@ public class HumanPlayer : GamePlayer
                             myPaths.Add(p);
 
                             EndLocalTurn();
+                            
                         }
                         else
                         {
@@ -315,23 +307,19 @@ public class HumanPlayer : GamePlayer
                 {
                     Intersection i = hit.collider.transform.parent.GetComponent<Intersection>();
 
-                    foreach (Intersection mySettlement in selectableSettlements)
+                    if (selectableSettlements.Contains(i))
                     {
-                        if (i == mySettlement)
-                        {
+                        Debug.Log("Creating city");
 
-                            Debug.Log("Creating city");
+                        ToggleSettlementRipples();
 
-                            ToggleSettlementRipples();
+                        i.ConstructCity();
 
-                            i.ConstructCity();
+                        inventory.GiveToPlayer(Inventory.UnitCode.SETTLEMENT, 1); // Return 1 settlement to the player's stock.
+                        inventory.TakeFromPlayer(Inventory.UnitCode.CITY, 1); // Take 1 city from the player's stock.
 
-                            inventory.GiveToPlayer(Inventory.UnitCode.SETTLEMENT, 1); // Return 1 settlement to the player's stock.
-                            inventory.TakeFromPlayer(Inventory.UnitCode.CITY, 1); // Take 1 city from the player's stock.
-                            
-                            inventory.PayCityConstruction();
-                            currentPhase = Phase.TRADE_BUILD_IDLE;
-                        }
+                        inventory.PayCityConstruction();
+                        currentPhase = Phase.TRADE_BUILD_IDLE;
                     }
                 }
             }

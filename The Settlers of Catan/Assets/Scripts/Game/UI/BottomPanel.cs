@@ -42,6 +42,7 @@ public class BottomPanel : MonoBehaviour
         
     }
 
+    public bool TradePanelOpen() { return tradePanelOpen; }
     public void OpenResourcesTab()
     {
         TogglePanel(PanelCode.RESOURCES);
@@ -65,6 +66,14 @@ public class BottomPanel : MonoBehaviour
     public void OpenTradeTab()
     {
         // if (!alreadyTrading || !alreadyPending)
+
+        GamePlayer localPlayer = GamePlayer.FindLocalPlayer();
+
+        if (!localPlayer.IsMyTurn() || localPlayer.GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE)
+        {
+            return;
+        }
+
         TogglePanel(PanelCode.TRADE);
     }
     

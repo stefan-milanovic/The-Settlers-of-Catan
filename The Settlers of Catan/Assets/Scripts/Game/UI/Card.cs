@@ -11,13 +11,13 @@ public class Card : MonoBehaviour
     [SerializeField]
     private Inventory.UnitCode unitCode;
 
-    private bool enabled;
+    private new bool enabled;
     private bool visible = false;
     private bool selected = false;
     
     // private int count;
 
-    private Inventory inventory;
+    private Inventory inventory; // If this field is null, the card belongs to the offers panel during a trade.
 
     private TextMeshProUGUI stockCount;
     private Image image;
@@ -28,6 +28,9 @@ public class Card : MonoBehaviour
 
     // Start is called before the first frame update
     void Start()
+    {    }
+
+    public void Init()
     {
         image = gameObject.GetComponent<Image>();
         stockCount = gameObject.transform.parent.parent.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>();
@@ -38,7 +41,14 @@ public class Card : MonoBehaviour
     {
     }
 
+    public void SetEnabled(bool enabled)
+    {
+        this.enabled = enabled; 
+    }
+
     public Inventory.UnitCode GetUnitCode() { return unitCode; }
+
+    public int getAmount() { return amount; }
 
     public void SetInventory(Inventory inv)
     {
@@ -138,10 +148,12 @@ public class Card : MonoBehaviour
 
     public void OnCardClicked()
     {
+        // Only visible cards that have more than 1 as their amount can be clicked.
         
-        if (!enabled || !visible) return;
+        if (!visible || !enabled) return;
 
         Debug.Log("Card " + unitCode + " clicked!");
+
         // Construction cards -- check if the player is in BUILD
         if (IsConstructionCard())
         {
@@ -183,6 +195,41 @@ public class Card : MonoBehaviour
 
 
         // Resource cards -- check if the player is in trade, if it is drop into trade menu and reduce current cost
+        // also check if the card is in the inventory or not
+
+        if (IsResourceCard())
+        {
+            TradeController tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
+            // Check if it's in the inventory or in the trade slot.
+            if (gameObject.tag == "InventoryCard")
+            {
+                if (!tradeController.IsTrading()) { return; }
+
+                // Move 1 stock from the inventory to the local offers slot.
+                inventory.TakeFromPlayer(this.unitCode, 1);
+                tradeController.OfferResource(this.unitCode, 1);
+                
+            }
+            else if (gameObject.tag == "TradeCard")
+            {
+                // if it's the remote player card that's being clicked, do not do anything
+                if (tradeController.IsLocalCard(this))
+                {
+                    // Move 1 stock from the offers panel to the inventory.
+
+                    inventory.GiveToPlayer(this.unitCode, 1);
+                    tradeController.RetractResourceOffer(this.unitCode, 1);
+                }
+                else
+                {
+                    // If the player is trading with the supply, handle the click.
+                    if (tradeController.IsSupplyTrading())
+                    {
+                        tradeController.SupplyCardChosen(this.unitCode, 1);
+                    }
+                }
+            }
+        }
     }
     
 }

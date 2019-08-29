@@ -22,10 +22,13 @@ public class Hex : MonoBehaviour
 
     // No resource set means it's a desert hex.
     private Resource resource;
-    private int number;
+    private int number = 0;
 
     [SerializeField]
     private Intersection[] intersections;
+
+    [SerializeField]
+    private Hex[] neighbouringHexes;
 
     // Start is called before the first frame update
     void Start()
@@ -42,6 +45,20 @@ public class Hex : MonoBehaviour
     public Resource GetResource() { return resource; }
     public int GetNumber() { return number; }
 
+    // If any neighbouring hex has been initialised with a red number (6 or 8), this returs true.
+    public bool NeighbourHasRedNumber()
+    {
+        foreach (Hex neighbour in neighbouringHexes)
+        {
+            if (neighbour.number == 6 || neighbour.number == 8)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void SetMaterial(string materialPrefix)
     {
         photonView.RPC("RPCSetMaterial", RpcTarget.All, materialPrefix);
@@ -51,7 +68,7 @@ public class Hex : MonoBehaviour
     {
         photonView.RPC("RPCSetNumber", RpcTarget.All, number);
     }
-
+    
     [PunRPC]
     private void RPCSetMaterial(string materialPrefix)
     {
@@ -77,8 +94,9 @@ public class Hex : MonoBehaviour
         {
             childText.text = "<color=red>" + number + "</color>";
         }
-        else
+        else if (number != 7)
         {
+
             childText.text = "" + number;
         }
 

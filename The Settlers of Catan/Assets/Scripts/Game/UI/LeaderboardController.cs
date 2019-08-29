@@ -6,10 +6,6 @@ using UnityEngine;
 
 public class LeaderboardController : MonoBehaviour
 {
-
-    private readonly double[] yMins = { 0.6, 0.4, 0.2, 0 };
-    private readonly double[] yMaxs = { 0.8, 0.6, 0.4, 0.2 };
-
     [SerializeField]
     private PlayerSlot[] playerSlots;
 

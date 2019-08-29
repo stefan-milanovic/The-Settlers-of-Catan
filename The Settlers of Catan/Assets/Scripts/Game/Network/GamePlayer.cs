@@ -25,10 +25,19 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         TRADING
     }
 
-    protected enum MessageCode
+    public enum MessageCode
     {
         RESOURCE_INCOME,
-        TRADE_REQUEST
+        TRADE_REQUEST,
+        TRADE_ACCEPTED,
+        TRADE_DECLINED,
+        TRADE_CANCELLED,
+        TRADE_PERFORMED,
+        TRADE_LOCK,
+        TRADE_UNLOCK,
+        TRADE_EXECUTE,
+        RESOURCE_OFFERED,
+        RESOURCE_RETRACTED
     }
     
     // during dice roll phase the player can activate a development card from earlier
@@ -90,6 +99,22 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         rollDiceButton = GameObject.Find("RollDiceButton").GetComponent<Button>();
     }
+
+    public static GamePlayer FindLocalPlayer()
+    {
+        GamePlayer[] playerList = FindObjectsOfType<HumanPlayer>();
+        foreach (GamePlayer player in playerList)
+        {
+            if (player.GetPhotonPlayer() == PhotonNetwork.LocalPlayer)
+            {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    public bool IsMyTurn() { return myTurn; }
 
     public override void OnEnable()
     {
@@ -188,7 +213,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
-                tradeController.Init();
+                tradeController.Init(inventory);
 
                 // Claim an empty leaderboard slot.
                 ClaimLeaderboardSlot();
@@ -267,7 +292,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     }
 
     // Gets called when another player makes a move.
-    public void OnPlayerMove(Player player, int turn, object move)
+    public void OnPlayerMove(Player sender, int turn, object move)
     {
 
         int[] moveMessage = (int[])move;
@@ -289,16 +314,91 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 }
                 break;
             case MessageCode.TRADE_REQUEST:
-                // Check if I am the recepient.
-                int senderId = moveMessage[1];
+                // Check if I am the recepient of the trade request.
+                int recepientId = moveMessage[1];
 
-                if (senderId == PhotonNetwork.LocalPlayer.ActorNumber)
+                if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
                 {
                     // Display Accept/Decline message locally.
+                    tradeController.ReceiveTradeRequest(sender.ActorNumber, recepientId);
+                }
+                break;
+            case MessageCode.TRADE_ACCEPTED:
+
+                int senderId = moveMessage[1];
+
+                // If I am the initial sender of the trade request, accept this message.
+                if (senderId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.RemoteTradeAccepted();
+                }
+                break;
+            case MessageCode.TRADE_DECLINED:
+
+                senderId = moveMessage[1];
+
+                // If I am the initial sender of the trade request, accept this message.
+                if (senderId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.RemoteTradeDeclined();
+                }
+                break;
+            case MessageCode.TRADE_CANCELLED:
+
+                int receiverId = moveMessage[1];
+                // Check if I am the recepient of this message.
+                if (receiverId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.RemoteTradeCancelled();
+                }
+                break;
+
+            case MessageCode.TRADE_LOCK:
+
+                receiverId = moveMessage[1];
+
+                if (receiverId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.RemoteTradeLocked();
+                }
+                break;
+            case MessageCode.TRADE_UNLOCK:
+
+                receiverId = moveMessage[1];
+
+                if (receiverId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.RemoteTradeUnlocked();
+                }
+                break;
+            case MessageCode.TRADE_EXECUTE:
+
+                receiverId = moveMessage[1];
+
+                if (receiverId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.RemoteTradeExecuted();
+                }
+                break;
+            case MessageCode.RESOURCE_OFFERED:
+                
+                receiverId = moveMessage[1];
+
+                if (receiverId == PhotonNetwork.LocalPlayer.ActorNumber) {
+                    tradeController.ResourceOffered((Inventory.UnitCode)moveMessage[2], moveMessage[3]);
+                }
+                break;
+            case MessageCode.RESOURCE_RETRACTED:
+                // Check if I am the recepient of this message.
+                receiverId = moveMessage[1];
+
+                if (receiverId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    tradeController.ResourceOfferRetracted((Inventory.UnitCode)moveMessage[2], moveMessage[3]);
                 }
                 break;
         }
-        
+
     }
 
 
@@ -336,7 +436,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             {
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
-                tradeController.Init();
+                tradeController.Init(inventory);
 
                 // Claim an empty leaderboard slot.
                 ClaimLeaderboardSlot();
@@ -399,18 +499,42 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         }
 
-
-
         selectableIntersections = new List<Intersection>();
-        foreach (GameObject intersection in intersections)
+        if (currentTurn < 3)
         {
-            Intersection i = intersection.GetComponent<Intersection>();
-            if (i.IsAvailable())
+            // This logic only applies when placing starting settlements.
+            
+            foreach (GameObject intersection in intersections)
             {
-                selectableIntersections.Add(i);
-                i.ToggleRipple();
+                Intersection i = intersection.GetComponent<Intersection>();
+                if (i.IsAvailable())
+                {
+                    selectableIntersections.Add(i);
+                    i.ToggleRipple();
+                }
             }
         }
+        else
+        {
+            // Locate reachable, available intersections. Avoid duplicates.
+            
+            foreach (WorldPath road in myPaths)
+            {
+                foreach (Intersection i in road.GetIntersections())
+                {
+                    if (i.IsAvailable())
+                    {
+                        if (!selectableIntersections.Contains(i))
+                        {
+                            selectableIntersections.Add(i);
+                            i.ToggleRipple();
+                        }
+                        
+                    }
+                }
+            }
+        }
+        
     }
 
     protected void FindSelectablePaths()
@@ -419,7 +543,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         busy = true;
 
-        selectablePaths = new List<WorldPath>();
+        
 
         if (currentTurn == 1)
         {
@@ -431,21 +555,59 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             eventTextController.SetText(EventTextController.TextCode.SECOND_TURN_PHASE_TWO, PhotonNetwork.LocalPlayer);
         }
 
-        foreach (Intersection i in myIntersections)
+        selectablePaths = new List<WorldPath>();
+
+        if (currentTurn < 3)
         {
-            List<WorldPath> availablePaths = i.GetAvailablePaths();
-
-            foreach (var path in availablePaths)
+            // This logic only applies when placing starting roads.
+            foreach (Intersection i in myIntersections)
             {
-                if ((currentTurn == 1 && i == myIntersections[0]) || (currentTurn == 2 && i == myIntersections[1]) || currentTurn >= 3)
-                {
-                    selectablePaths.Add(path);
-                    path.ToggleBlink();
-                }
+                List<WorldPath> availablePaths = i.GetAvailablePaths();
 
+                foreach (var path in availablePaths)
+                {
+                    if ((currentTurn == 1 && i == myIntersections[0]) || (currentTurn == 2 && i == myIntersections[1]) || currentTurn >= 3)
+                    {
+                        selectablePaths.Add(path);
+                        path.ToggleBlink();
+                    }
+
+                }
+            }
+        }
+        else
+        {
+
+            // 1) Paths adjacent to the player's settlements that are available.
+
+            foreach (Intersection i in myIntersections)
+            {
+                selectablePaths.AddRange(i.GetAvailablePaths());
             }
 
+            // 2) Paths connected to the player's roads. Avoid duplicates.
+
+            foreach (WorldPath road in myPaths)
+            {
+                List<WorldPath> connectedPaths = road.GetAvailablePaths();
+
+                foreach (WorldPath p in connectedPaths)
+                {
+                    if (!selectablePaths.Contains(p))
+                    {
+                        selectablePaths.Add(p);
+                    }
+                }
+            }
+
+            // Toggle blinks for the player.
+
+            foreach (WorldPath path in selectablePaths)
+            {
+                path.ToggleBlink();
+            }
         }
+
 
 
 
@@ -472,13 +634,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     
     protected void ToggleIntersectionRipples()
     {
-        foreach (GameObject intersection in intersections)
+        foreach (Intersection intersection in selectableIntersections)
         {
-            Intersection i = intersection.GetComponent<Intersection>();
-            if (i.IsAvailable())
-            {
-                i.ToggleRipple();
-            }
+            intersection.ToggleRipple();
         }
         busy = false;
     }
@@ -621,12 +779,5 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     }
 
-    public void SendTradeRequest(Player recepient)
-    {
-        // send request via
-        int[] tradeRequestMessage = new int[2];
-        tradeRequestMessage[0] = (int)MessageCode.TRADE_REQUEST;
-        tradeRequestMessage[1] = recepient.ActorNumber;
-        turnManager.SendMove(tradeRequestMessage, false);
-    }
+
 }

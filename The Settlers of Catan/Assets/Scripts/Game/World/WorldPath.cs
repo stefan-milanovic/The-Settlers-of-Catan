@@ -18,14 +18,10 @@ public class WorldPath : MonoBehaviour
     private GameObject emissionObject;
 
     private PhotonView photonView;
-
-    // ADD SOON
+    
+    [SerializeField]
     private Intersection[] intersections;
-
-    // WHEN LOOKING FOR PATHS WHERE PLAYER CAN BUILD A ROAD
-    // ASK:
-    // 1) player's settlements - all adjacent available roads
-    // 2) player's roads -- all available roads connected to this road (we can find that by going through the intersections and then checking if their surroundingRoads are available)
+    
 
     // Start is called before the first frame update
     void Start()
@@ -43,6 +39,20 @@ public class WorldPath : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public Intersection[] GetIntersections() { return intersections; }
+
+    // We return all paths connected to this path that are available. We do not count the 
+    public List<WorldPath> GetAvailablePaths()
+    {
+        List<WorldPath> list = new List<WorldPath>();
+        foreach (Intersection i in intersections)
+        {
+            list.AddRange(i.GetAvailablePaths());
+        }
+
+        return list;
     }
 
     public bool IsAvailable() { return available;  }
@@ -71,6 +81,14 @@ public class WorldPath : MonoBehaviour
         {
             emissionObject.SetActive(blinkActive = false);
         }
+
+        // Colour the road according to the owner's colour.
+        string materialPath = "Materials/Paths/Player" + ownerId + "WoodPath";
+
+        ColorUtility.TryParseHtmlString(PhotonNetwork.CurrentRoom.GetPlayer(ownerId).CustomProperties["colour"] as string, out Color playerColour);
+
+        road.GetComponent<MeshRenderer>().material = Resources.Load(materialPath) as Material;
+        road.GetComponent<MeshRenderer>().material.SetColor("_Color", playerColour);
 
         road.SetActive(true);
         this.ownerId = ownerId;

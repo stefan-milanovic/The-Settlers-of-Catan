@@ -8,16 +8,15 @@ using Photon.Pun;
 
 public class TradeButton : MonoBehaviour
 {
-
+   
     private bool interactable = false;
     private Player playerToTradeWith;
 
-    private bool maritime = false;
+    private bool supply = false;
     
     // Start is called before the first frame update
     void Start()
     {
-        
     }
 
     // Update is called once per frame
@@ -26,9 +25,17 @@ public class TradeButton : MonoBehaviour
         
     }
 
-    public void SetMaritime(bool maritime)
+    public void SetSupplyFlag(bool supplyFlag)
     {
-        this.maritime = maritime;
+        this.supply = supplyFlag;
+        SetInteractable();
+    }
+
+    public void SetInteractable()
+    {
+        this.interactable = true;
+        gameObject.GetComponent<Button>().interactable = true;
+        
     }
 
     private void SetButtonText()
@@ -45,53 +52,38 @@ public class TradeButton : MonoBehaviour
     {
 
         playerToTradeWith = p;
-        interactable = true;
+
         // set button interactable to true
-
-        this.interactable = true;
-        gameObject.GetComponent<Button>().interactable = true;
-
+        SetInteractable();
+       
         SetButtonText();
     }
 
-    private GamePlayer FindLocalPlayer()
-    {
-        GamePlayer[] playerList = FindObjectsOfType<HumanPlayer>();
-        foreach (GamePlayer player in playerList)
-        {
-            if (player.GetPhotonPlayer() == PhotonNetwork.LocalPlayer)
-            {
-                return player;
-            }
-        }
-
-        return null;
-    }
+    
     public void SendTradeRequest()
     {
-        
+
 
         if (!interactable) return;
 
         // If the player is not in idle trade phase, decline request (also place in event text).
 
-        GamePlayer p = FindLocalPlayer();
-        // Send trade request to player bound to this button. If the maritime flag is set, open local trade.
+        GamePlayer p = GamePlayer.FindLocalPlayer();
 
         if (p.GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE)
         {
             return;
         }
 
-        if (maritime)
+        if (supply)
         {
-
+            // Trading with the supply. Handle all trading logic locally.
+            GameObject.Find("TradeController").GetComponent<TradeController>().SupplyTradeInit();
         }
         else
         {
-            // Trading with another player. Send request.
-            GameObject.Find("TradeController").GetComponent<TradeController>().SendTradeRequest(p, playerToTradeWith, GetPlayerToTradeWithDisplayName());
-
+            // Send trade request to player bound to this button.
+            GameObject.Find("TradeController").GetComponent<TradeController>().SendTradeRequest(p, playerToTradeWith);
         }
 
 

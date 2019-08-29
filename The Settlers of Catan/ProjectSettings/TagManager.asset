@@ -39,6 +39,8 @@ TagManager:
   - TradeButton
   - RollDiceButton
   - EndTurnButton
+  - InventoryCard
+  - TradeCard
   layers:
   - Default
   - TransparentFX
