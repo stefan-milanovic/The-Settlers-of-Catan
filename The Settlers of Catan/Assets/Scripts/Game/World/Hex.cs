@@ -28,6 +28,9 @@ public class Hex : MonoBehaviour
     private Intersection[] intersections;
 
     [SerializeField]
+    private GameObject bandit;
+
+    [SerializeField]
     private Hex[] neighbouringHexes;
 
     // Start is called before the first frame update
@@ -94,12 +97,15 @@ public class Hex : MonoBehaviour
         {
             childText.text = "<color=red>" + number + "</color>";
         }
-        else if (number != 7)
+        else if (number == 7)
         {
-
+            // Place robber on top of this hex.
+            bandit.SetActive(true);
+        }
+        else
+        {
             childText.text = "" + number;
         }
-
         this.number = number;
 
     }
