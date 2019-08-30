@@ -42,7 +42,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         SEVEN_ROLLED_ANNOUNCEMENT,
         SEVEN_ROLLED_ACKNOWLEDGEMENT,
         SEVEN_ROLLED_DISCARD_COMPLETE,
-
+        STEAL_RESOURCE_REQUEST,
+        STEAL_RESOURCE_REPLY
     }
     
     // during dice roll phase the player can activate a development card from earlier
@@ -409,8 +410,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 // Only the player who rolled the 7 does this.
                 if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
                 {
-                    haveToDiscard[acknowledged++] = moveMessage[3] == 1 ? true : false;
-
+                    haveToDiscard[moveMessage[2]] = moveMessage[3] == 1 ? true : false;
+                    acknowledged++;
                     if (acknowledged == PhotonNetwork.CurrentRoom.PlayerCount)
                     {
                         
@@ -453,6 +454,30 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                         // Last person to discard. Continue on to the moving the bandit phase.
                         MoveBandit();
                     }
+                }
+                break;
+
+            case MessageCode.STEAL_RESOURCE_REQUEST:
+
+                recepientId = moveMessage[1];
+
+                if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    // I am the person who should give my opponent a random resource card.
+                    inventory.GiveRandomResourceCard(moveMessage[2]);
+                }
+
+                break;
+
+            case MessageCode.STEAL_RESOURCE_REPLY:
+
+                recepientId = moveMessage[1];
+                if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    // Check which resource the player sent you.
+
+                    inventory.ReceiveStolenCard(sender.ActorNumber, moveMessage[2]);
+                    SetPhase(GamePlayer.Phase.TRADE_BUILD_IDLE);
                 }
                 break;
         }
@@ -880,5 +905,39 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         currentPhase = Phase.BANDIT_MOVE;
     }
 
+    protected void StealFromPlayer(Hex banditHex)
+    {
+        // Find all the players that have a settlement or a city on this hex (and they are not this player).
 
+        Intersection[] hexIntersections = banditHex.GetIntersections();
+        List<int> playerIdList = new List<int>();
+
+        foreach (Intersection i in hexIntersections)
+        {
+            if (i.HasSettlement() || i.HasCity())
+            {
+                if (i.GetOwnerId() != PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    // Only add a player once.
+                    if (!playerIdList.Contains(i.GetOwnerId()))
+                    {
+                        playerIdList.Add(i.GetOwnerId());
+                    }
+                }
+            }
+        }
+
+        // If the player list is empty, just move on to the TRADE_BUILD phase.
+        if (playerIdList.Count == 0)
+        {
+            eventTextController.SetText(EventTextController.TextCode.STEAL_NO_ADJACENT_PLAYER, PhotonNetwork.LocalPlayer);
+            currentPhase = Phase.TRADE_BUILD_IDLE;
+        }
+        else
+        {
+            // Notify the discard controller to open the steal panel and allow the player to select someone to steal from.
+            GameObject.Find("DiscardController").GetComponent<DiscardController>().PrepareStealing(playerIdList);
+        }
+    }
+    
 }

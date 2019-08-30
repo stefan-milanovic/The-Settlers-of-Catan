@@ -636,6 +636,10 @@ public class TradeController : MonoBehaviour
             {
                 UnlockLocalPanel();
             }
+            if (otherConfirmed)
+            {
+                UnlockRemotePanel();
+            }
         } else
         {
             SupplyOnOfferChanged();
@@ -666,6 +670,10 @@ public class TradeController : MonoBehaviour
             {
                 UnlockLocalPanel();
             }
+            if (otherConfirmed)
+            {
+                UnlockRemotePanel();
+            }
         }
         else
         {
@@ -684,8 +692,12 @@ public class TradeController : MonoBehaviour
         int oldAmount = remoteCards[(int)unitCode].getAmount();
         remoteCards[(int)unitCode].UpdateCard(oldAmount + amount);
 
-        // If the remote player had confirmed the trade beforehand, unlock.
+        // If the remote player had confirmed the trade beforehand, unlock both mine and his.
 
+        if (confirmed)
+        {
+            UnlockLocalPanel();
+        }
         if (otherConfirmed)
         {
             UnlockRemotePanel();
@@ -699,7 +711,11 @@ public class TradeController : MonoBehaviour
         int oldAmount = remoteCards[(int)unitCode].getAmount();
         remoteCards[(int)unitCode].UpdateCard(oldAmount - amount);
 
-        // If the remote player had confirmed the trade beforehand, unlock.
+        // If the remote player had confirmed the trade beforehand, unlock both mine and his.
+        if (confirmed)
+        {
+            UnlockLocalPanel();
+        }
         if (otherConfirmed)
         {
             UnlockRemotePanel();

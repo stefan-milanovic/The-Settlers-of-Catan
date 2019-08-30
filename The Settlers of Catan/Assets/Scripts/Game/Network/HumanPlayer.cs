@@ -342,7 +342,7 @@ public class HumanPlayer : GamePlayer
                 //Debug.Log(hit.collider.name);
                 if (hit.collider.tag == "Hex") // click on another player, enemy, building
                 {
-                    Hex hex = hit.collider.transform.parent.GetComponent<Hex>();
+                    Hex hex = hit.collider.transform.GetComponent<Hex>();
 
                     if (!hex.OccupiedByBandit())
                     {
@@ -355,6 +355,8 @@ public class HumanPlayer : GamePlayer
                         hex.OccupyByBandit();
 
                         // Move to steal phase.
+
+                        StealFromPlayer(hex);
                     }
                    
                 }

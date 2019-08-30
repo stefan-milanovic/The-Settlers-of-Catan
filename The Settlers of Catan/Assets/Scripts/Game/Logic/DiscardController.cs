@@ -12,6 +12,12 @@ public class DiscardController : MonoBehaviour
     private GameObject discardPanel;
 
     [SerializeField]
+    private GameObject stealPanel;
+
+    [SerializeField]
+    private Button[] stealButtons;
+
+    [SerializeField]
     private Card[] discardCards;
 
     [SerializeField]
@@ -25,6 +31,10 @@ public class DiscardController : MonoBehaviour
     private bool discarding = false;
 
     private int notifierId;
+
+    private const int MAX_STEAL_PLAYER_COUNT = 3;
+
+    private int[] playerStealIds = new int[MAX_STEAL_PLAYER_COUNT];
 
     private int Remaining {
         get { return remaining; }
@@ -130,6 +140,72 @@ public class DiscardController : MonoBehaviour
 
         GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(discardCompleteMessage, false);
 
+
+        // Reset.
         this.discarding = false;
+        discardPanel.SetActive(false);
+        foreach (Card card in discardCards)
+        {
+            card.SetVisible(false);
+            card.UpdateCard(0);
+        }
+    }
+
+    public void PrepareStealing(List<int> playerIdList)
+    {
+        // The playerIdList size can be maximum 3.
+
+        stealPanel.SetActive(true);
+
+        // Reset buttons. Fill with player info top down.
+        for (int i = 0; i < stealButtons.Length; i++)
+        {
+            if (playerIdList.Count == 0)
+            {
+                stealButtons[i].interactable = false;
+                stealButtons[i].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "";
+
+                playerStealIds[i] = -1;
+            }
+            else
+            {
+                int playerId = playerIdList[0];
+
+                playerIdList.RemoveAt(0);
+                stealButtons[i].interactable = true;
+                stealButtons[i].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = PlayerNameFromId(playerId);
+
+                playerStealIds[i] = playerId;
+            }
+        }
+        
+
+    }
+
+    private string PlayerNameFromId(int playerId)
+    {
+        return "<color=" + PhotonNetwork.CurrentRoom.GetPlayer(playerId).CustomProperties["colour"] + ">" + PhotonNetwork.CurrentRoom.GetPlayer(playerId).CustomProperties["username"] + "</color>";
+    }
+
+    public void StealButtonPressed(int index)
+    {
+        // Get adequate player.
+
+        int playerId = playerStealIds[index];
+
+        // Send a steal resource card message to them.
+        int[] resourceCardStealMessage = new int[3];
+
+        resourceCardStealMessage[0] = (int)GamePlayer.MessageCode.STEAL_RESOURCE_REQUEST; // Message code.
+        resourceCardStealMessage[1] = playerId; // Who should read the message?
+        resourceCardStealMessage[2] = PhotonNetwork.LocalPlayer.ActorNumber; // Who should the player reply to.
+
+        GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(resourceCardStealMessage, false);
+
+        // Close panel.
+
+        stealPanel.SetActive(false);
+
+        // Wait for the reply in GamePlayer.OnPlayerMove().
     }
 }

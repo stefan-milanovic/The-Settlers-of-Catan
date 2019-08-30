@@ -31,7 +31,7 @@ public class Inventory : MonoBehaviour
     
     private int[] stock =
     {
-        10, 10, 10, 10, 10,
+        0, 0, 0, 0, 0,
         0, 0, 0, 0, 0,
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };
@@ -216,5 +216,73 @@ public class Inventory : MonoBehaviour
         }
     }
 
+    public void GiveRandomResourceCard(int recepientId)
+    {
+        // If I don't have any cards, return nothing.
+        if (GetResourceCardCount() == 0)
+        {
+            int[] stealResourceReplyMessage = new int[3];
+
+            stealResourceReplyMessage[0] = (int)GamePlayer.MessageCode.STEAL_RESOURCE_REPLY; // Message code.
+            stealResourceReplyMessage[1] = recepientId; // Who should read this message?
+            stealResourceReplyMessage[2] = -1; // What resource am I sending?
+
+            GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(stealResourceReplyMessage, false);
+        }
+        else
+        {
+            // Choose a random card.
+
+            UnitCode selectedCard;
+
+            do
+            {
+                selectedCard = (UnitCode) Random.Range((int)UnitCode.BRICK, (int)UnitCode.WOOL);
+            } while (stock[(int)selectedCard] == 0);
+
+            // Send the message.
+
+            this.TakeFromPlayer(selectedCard, 1);
+
+            int[] stealResourceReplyMessage = new int[3];
+
+            stealResourceReplyMessage[0] = (int)GamePlayer.MessageCode.STEAL_RESOURCE_REPLY; // Message code.
+            stealResourceReplyMessage[1] = recepientId; // Who should read this message?
+            stealResourceReplyMessage[2] = (int)selectedCard; // What resource am I sending?
+
+            GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(stealResourceReplyMessage, false);
+        }
+    }
+
+    public void ReceiveStolenCard(int senderId, int receivedResourceId)
+    {
+        // If the resource id is -1, the selected player had no card to give.
+
+        if (receivedResourceId == -1)
+        {
+            GameObject.Find("EventTextController").GetComponent<EventTextController>().SetText(EventTextController.TextCode.NO_RESOURCE_STOLEN, PhotonNetwork.LocalPlayer, senderId);
+        }
+        else
+        {
+            UnitCode receivedResource = (UnitCode)receivedResourceId;
+            this.GiveToPlayer(receivedResource, 1);
+            GameObject.Find("EventTextController").GetComponent<EventTextController>().SetText(EventTextController.TextCode.RESOURCE_STOLEN, PhotonNetwork.LocalPlayer, senderId, GetResourceCardText(receivedResource));
+        }
+        
+    }
+
+    private string GetResourceCardText(UnitCode resourceCode)
+    {
+        switch (resourceCode)
+        {
+            case UnitCode.BRICK: return "<color=red>Brick</color";
+            case UnitCode.GRAIN: return "<color=yellow>Grain</color";
+            case UnitCode.LUMBER: return "<color=green>Lumber</color";
+            case UnitCode.ORE: return "<color=blue>Ore</color";
+            case UnitCode.WOOL: return "<color=orange>Wool</color";
+        }
+
+        return "<invalid_resource_code>";
+    }
 
 }

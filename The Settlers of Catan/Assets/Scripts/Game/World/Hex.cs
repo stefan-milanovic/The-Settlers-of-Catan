@@ -50,6 +50,8 @@ public class Hex : MonoBehaviour
 
     public static Hex GetBanditHex() { return banditHex; }
 
+    public Intersection[] GetIntersections() { return intersections; }
+
     public Resource GetResource() { return resource; }
     public int GetNumber() { return number; }
 
@@ -172,6 +174,12 @@ public class Hex : MonoBehaviour
 
     public void OccupyByBandit()
     {
+        photonView.RPC("RPCOccupyByBandit", RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPCOccupyByBandit()
+    {
         bandit.SetActive(true);
         occupiedByBandit = true;
 
@@ -179,6 +187,12 @@ public class Hex : MonoBehaviour
     }
 
     public void RemoveBandit()
+    {
+        photonView.RPC("RPCRemoveBandit", RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPCRemoveBandit()
     {
         bandit.SetActive(false);
         occupiedByBandit = false;

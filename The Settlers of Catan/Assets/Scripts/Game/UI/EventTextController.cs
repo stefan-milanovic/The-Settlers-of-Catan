@@ -45,7 +45,10 @@ public class EventTextController : MonoBehaviour
         RESOURCE_EARNED,
         NO_RESOURCE_EARNED,
         SHOULD_DISCARD,
-        BANDIT_MOVE
+        BANDIT_MOVE,
+        STEAL_NO_ADJACENT_PLAYER,
+        NO_RESOURCE_STOLEN,
+        RESOURCE_STOLEN
     };
     
     private bool busy = false;
@@ -201,6 +204,7 @@ public class EventTextController : MonoBehaviour
                         {
                             resultText += ", ";
                         }
+                        //discardlist[i] is null for some reason
                         resultText += "<color=" + discardList[i].CustomProperties["colour"] + ">" + discardList[i].CustomProperties["username"] + "</color>";
                        
                     }
@@ -240,6 +244,15 @@ public class EventTextController : MonoBehaviour
 
             case TextCode.BANDIT_MOVE:
                 return "Waiting for " + "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " to move the bandit to another hex.";
+            case TextCode.STEAL_NO_ADJACENT_PLAYER:
+                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> had nobody to steal from.";
+            case TextCode.NO_RESOURCE_STOLEN:
+                Player stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
+                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> had no cards to steal from " + "<color=" + stealPlayer.CustomProperties["colour"] + ">" + stealPlayer.CustomProperties["username"] + ".";
+            case TextCode.RESOURCE_STOLEN:
+                stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
+                string resourceText = (string)additionalParams[1];
+                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> stole 1x" + resourceText + " from <color=" + stealPlayer.CustomProperties["colour"] + ">" + stealPlayer.CustomProperties["username"] + ".";
         }
         
 

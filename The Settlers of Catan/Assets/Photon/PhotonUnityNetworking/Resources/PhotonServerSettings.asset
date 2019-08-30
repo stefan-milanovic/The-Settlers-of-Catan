@@ -49,5 +49,7 @@ MonoBehaviour:
   - RPCTakeSlot
   - RPCSetCurrentPlayer
   - RPCUpdateLeaderboard
+  - RPCOccupyByBandit
+  - RPCRemoveBandit
   DisableAutoOpenWizard: 1
   ShowSettings: 1
