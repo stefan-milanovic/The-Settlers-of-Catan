@@ -27,6 +27,9 @@ public class BottomPanel : MonoBehaviour
     private Button endTurnButton;
 
     [SerializeField]
+    private Button claimVictoryButton;
+
+    [SerializeField]
     private GameObject tradePanel;
 
 
@@ -249,6 +252,24 @@ public class BottomPanel : MonoBehaviour
     public void DisableEndingTurn()
     {
         DisableEndTurnButton();
+    }
+
+    public void EnableClaimVictory()
+    {
+        DisableEndTurnButton();
+        HideEndTurnButton();
+        EnableClaimVictoryButton();
+    }
+
+    public void EnableClaimVictoryButton()
+    {
+        claimVictoryButton.gameObject.SetActive(true);
+        claimVictoryButton.interactable = true;
+    }
+
+    public void ClaimVictoryButtonPressed()
+    {
+        GamePlayer.FindLocalPlayer().GameOver();
     }
 
     #endregion

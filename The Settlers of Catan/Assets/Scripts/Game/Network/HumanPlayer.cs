@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class HumanPlayer : GamePlayer
 {
@@ -103,6 +104,19 @@ public class HumanPlayer : GamePlayer
         if (!photonView.IsMine)
         {
             return;
+        }
+
+        if (gameOver)
+        {
+            if (Input.GetKeyUp(KeyCode.Escape))
+            {
+
+                Debug.Log("A key or mouse click has been detected after game over");
+
+                // Leave the room.
+                PhotonNetwork.LeaveRoom();
+                SceneManager.LoadScene(0);
+            }
         }
 
         // Disables actions while it isn't the local player's turn

@@ -17,7 +17,7 @@ public class WorldPath : MonoBehaviour
     private GameObject road;
     private GameObject emissionObject;
 
-    private PhotonView photonView;
+    protected PhotonView photonView;
     
     [SerializeField]
     private Intersection[] intersections;

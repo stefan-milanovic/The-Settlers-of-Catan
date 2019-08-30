@@ -28,6 +28,7 @@ public class Inventory : MonoBehaviour
     };
 
     private const int UNIT_ARRAY_SIZE = 15;
+    private const int WIN_POINTS = 10;
     
     private int[] stock =
     {
@@ -43,7 +44,7 @@ public class Inventory : MonoBehaviour
     private const int START_CITY_COUNT = 4;
     
     private int playerScore = 0;
-    private int playerHiddenScore = 0;
+    private int hiddenPlayerScore = 0;
 
     private List<HarbourPath.HarbourBonus> harbourBonuses = new List<HarbourPath.HarbourBonus>();
 
@@ -171,10 +172,12 @@ public class Inventory : MonoBehaviour
         {
             case UnitCode.SETTLEMENT:
                 playerScore++;
+                hiddenPlayerScore++;
                 break;
             case UnitCode.CITY:
                 // Also increase the score by only 1 because a settlement was removed (-1 score) and a city was added (+2 score).
                 playerScore++;
+                hiddenPlayerScore++;
                 break;
         }
 
@@ -189,7 +192,17 @@ public class Inventory : MonoBehaviour
             GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().UpdateLeaderboard(PhotonNetwork.LocalPlayer.ActorNumber, playerScore);
         }
 
-        
+        if (CheckWinCondition() == true)
+        {
+            // Hide end turn button, show Claim Victory button.
+
+            GameObject.Find("BottomPanel").GetComponent<BottomPanel>().EnableClaimVictory();
+        }
+    }
+
+    private bool CheckWinCondition()
+    {
+        return hiddenPlayerScore >= WIN_POINTS;
     }
 
     private void ClaimLeaderboardSlot()
@@ -275,11 +288,11 @@ public class Inventory : MonoBehaviour
     {
         switch (resourceCode)
         {
-            case UnitCode.BRICK: return "<color=red>Brick</color";
-            case UnitCode.GRAIN: return "<color=yellow>Grain</color";
-            case UnitCode.LUMBER: return "<color=green>Lumber</color";
-            case UnitCode.ORE: return "<color=blue>Ore</color";
-            case UnitCode.WOOL: return "<color=orange>Wool</color";
+            case UnitCode.BRICK: return "<color=red>Brick</color>";
+            case UnitCode.GRAIN: return "<color=yellow>Grain</color>";
+            case UnitCode.LUMBER: return "<color=green>Lumber</color>";
+            case UnitCode.ORE: return "<color=blue>Ore</color>";
+            case UnitCode.WOOL: return "<color=orange>Wool</color>";
         }
 
         return "<invalid_resource_code>";

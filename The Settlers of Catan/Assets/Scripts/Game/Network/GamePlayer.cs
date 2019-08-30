@@ -43,9 +43,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         SEVEN_ROLLED_ACKNOWLEDGEMENT,
         SEVEN_ROLLED_DISCARD_COMPLETE,
         STEAL_RESOURCE_REQUEST,
-        STEAL_RESOURCE_REPLY
+        STEAL_RESOURCE_REPLY,
+        GAME_OVER
     }
-    
+
     // during dice roll phase the player can activate a development card from earlier
     protected Phase currentPhase = Phase.FIRST_SETTLEMENT_PLACEMENT;
 
@@ -57,6 +58,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     protected string colourHex;
 
     protected bool myTurn = false;
+    protected bool gameOver = false;
+
     protected int currentTurn;
 
     protected List<Intersection> selectableIntersections = new List<Intersection>();
@@ -428,6 +431,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                         if (waitingForDiscardCount != 0)
                         {
                             eventTextController.SetText(EventTextController.TextCode.SHOULD_DISCARD, null, playerList);
+                        } else
+                        {
+                            // No one is discarding. Move bandit.
+                            MoveBandit();
                         }
                     }
                 }
@@ -479,6 +486,13 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     inventory.ReceiveStolenCard(sender.ActorNumber, moveMessage[2]);
                     SetPhase(GamePlayer.Phase.TRADE_BUILD_IDLE);
                 }
+                break;
+
+            case MessageCode.GAME_OVER:
+
+                // A player has signalled that the game is over. Allow the local player to go back to the main menu by pressing ESC.
+                this.gameOver = true;
+
                 break;
         }
 
@@ -940,4 +954,24 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         }
     }
     
+    public void GameOver()
+    {
+        // Player won.
+        eventTextController.SetText(EventTextController.TextCode.GAME_OVER, PhotonNetwork.LocalPlayer);
+
+        // End the local player's turn.
+        myTurn = false;
+
+        // Notify everybody to set their game over flag.
+
+        int[] gameOverMessage = new int[1];
+        gameOverMessage[0] = (int)MessageCode.GAME_OVER;
+        turnManager.SendMove(gameOverMessage, false);
+    }
+
+    [PunRPC]
+    public void RPCGameOver()
+    {
+        this.gameOver = true;
+    }
 }

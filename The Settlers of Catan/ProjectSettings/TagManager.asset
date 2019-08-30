@@ -42,6 +42,7 @@ TagManager:
   - InventoryCard
   - TradeCard
   - DiscardCard
+  - ClaimVictoryButton
   layers:
   - Default
   - TransparentFX

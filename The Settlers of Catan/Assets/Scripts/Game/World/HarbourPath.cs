@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -34,6 +35,12 @@ public class HarbourPath : WorldPath
     }
 
     public void SetHarbourBonus(HarbourBonus bonus)
+    {
+        photonView.RPC("RPCSetHarbourBonus", RpcTarget.All, bonus);
+    }
+
+    [PunRPC]
+    private void RPCSetHarbourBonus(HarbourBonus bonus)
     {
         this.harbourBonus = bonus;
         SetHarbourText();

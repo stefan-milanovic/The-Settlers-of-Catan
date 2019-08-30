@@ -48,7 +48,8 @@ public class EventTextController : MonoBehaviour
         BANDIT_MOVE,
         STEAL_NO_ADJACENT_PLAYER,
         NO_RESOURCE_STOLEN,
-        RESOURCE_STOLEN
+        RESOURCE_STOLEN,
+        GAME_OVER
     };
     
     private bool busy = false;
@@ -253,6 +254,8 @@ public class EventTextController : MonoBehaviour
                 stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
                 string resourceText = (string)additionalParams[1];
                 return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> stole 1x" + resourceText + " from <color=" + stealPlayer.CustomProperties["colour"] + ">" + stealPlayer.CustomProperties["username"] + ".";
+            case TextCode.GAME_OVER:
+                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> has won the game! Press ESC to return to the main menu.";
         }
         
 
