@@ -127,11 +127,11 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// <param name="finished"></param>
     public void SendMove(object move, bool finished)
     {
-        if (IsFinishedByMe)
-        {
-            UnityEngine.Debug.LogWarning("Can't SendMove. Turn is finished by this player.");
-            return;
-        }
+        //if (IsFinishedByMe)
+        //{
+        //    UnityEngine.Debug.LogWarning("Can't SendMove. Turn is finished by this player.");
+        //    return;
+        //}
 
         // along with the actual move, we have to send which turn this move belongs to
         Hashtable moveHt = new Hashtable();
@@ -212,7 +212,7 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
             case EvRegisterPlayer:
                 {
                     playersConnected++;
-                    if (playersConnected == 1)
+                    if (playersConnected == 2)
                     {
                         // Only the master client starts the game once all the players join.
                         if (PhotonNetwork.IsMasterClient)

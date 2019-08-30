@@ -17,12 +17,15 @@ public class Hex : MonoBehaviour
         NO_RESOURCE
     }
 
+    private static Hex banditHex;
 
     private PhotonView photonView;
 
     // No resource set means it's a desert hex.
     private Resource resource;
     private int number = 0;
+
+    private bool occupiedByBandit = false;
 
     [SerializeField]
     private Intersection[] intersections;
@@ -45,6 +48,8 @@ public class Hex : MonoBehaviour
         
     }
 
+    public static Hex GetBanditHex() { return banditHex; }
+
     public Resource GetResource() { return resource; }
     public int GetNumber() { return number; }
 
@@ -61,6 +66,21 @@ public class Hex : MonoBehaviour
 
         return false;
     }
+
+    public bool HasIntersection(Intersection i)
+    {
+        foreach (Intersection intersection in intersections)
+        {
+            if (intersection == i)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool OccupiedByBandit() { return occupiedByBandit; }
 
     public void SetMaterial(string materialPrefix)
     {
@@ -100,7 +120,7 @@ public class Hex : MonoBehaviour
         else if (number == 7)
         {
             // Place robber on top of this hex.
-            bandit.SetActive(true);
+            OccupyByBandit();
         }
         else
         {
@@ -133,6 +153,10 @@ public class Hex : MonoBehaviour
         // Deserts do not generate income.
         if (number == 7) return income;
 
+        // Hexes with the bandit on them do not generate income.
+
+        if (occupiedByBandit) return income;
+
         foreach (Intersection i in intersections)
         {
             if (i.HasSettlement() || i.HasCity())
@@ -144,5 +168,19 @@ public class Hex : MonoBehaviour
         }
 
         return income;
+    }
+
+    public void OccupyByBandit()
+    {
+        bandit.SetActive(true);
+        occupiedByBandit = true;
+
+        Hex.banditHex = this;
+    }
+
+    public void RemoveBandit()
+    {
+        bandit.SetActive(false);
+        occupiedByBandit = false;
     }
 }

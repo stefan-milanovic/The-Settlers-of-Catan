@@ -22,6 +22,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         TRADE_BUILD_IDLE,
         BUILDING,
         STOP_BUILDING,
+        BANDIT_MOVE,
         TRADING
     }
 
@@ -37,7 +38,11 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         TRADE_UNLOCK,
         TRADE_EXECUTE,
         RESOURCE_OFFERED,
-        RESOURCE_RETRACTED
+        RESOURCE_RETRACTED,
+        SEVEN_ROLLED_ANNOUNCEMENT,
+        SEVEN_ROLLED_ACKNOWLEDGEMENT,
+        SEVEN_ROLLED_DISCARD_COMPLETE,
+
     }
     
     // during dice roll phase the player can activate a development card from earlier
@@ -80,9 +85,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     protected Player currentPlayer = null;
 
     protected Card selectedConstructionCard = null;
-
-    protected LeaderboardController leaderboardController;
+    
     protected TradeController tradeController;
+
+    protected int acknowledged;
+    protected bool[] haveToDiscard;
+    protected int waitingForDiscardCount;
 
     // UI
 
@@ -160,31 +168,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         this.turnManager.TurnManagerListener = this;
         this.turnManager.RegisterPlayer();
     }
-
-    public void ClaimLeaderboardSlot()
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            string key = "leaderboardSlot" + (i + 1);
-
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
-            {
-                [key] = PhotonNetwork.LocalPlayer.ActorNumber
-            },
-            new ExitGames.Client.Photon.Hashtable
-            {
-                [key] = 0
-            });
-
-            if ((int)PhotonNetwork.CurrentRoom.CustomProperties[key] == 0)
-            {
-                // This slot will be taken -- leave the loop.
-                Debug.Log("Player " + PhotonNetwork.LocalPlayer.ActorNumber + " got slot: " + key);
-                break;
-            }
-        }
-    }
-
+    
     public Inventory GetInventory()
     {
         return inventory;
@@ -214,10 +198,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
                 tradeController.Init(inventory);
-
-                // Claim an empty leaderboard slot.
-                ClaimLeaderboardSlot();
-
+                
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
 
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
@@ -397,6 +378,83 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     tradeController.ResourceOfferRetracted((Inventory.UnitCode)moveMessage[2], moveMessage[3]);
                 }
                 break;
+            case MessageCode.SEVEN_ROLLED_ANNOUNCEMENT:
+
+                // Every player does this.
+                senderId = moveMessage[1];
+                
+                int[] sevenRolledAcknowledgementMessage = new int[4];
+
+                sevenRolledAcknowledgementMessage[0] = (int)MessageCode.SEVEN_ROLLED_ACKNOWLEDGEMENT;
+                sevenRolledAcknowledgementMessage[1] = senderId;
+                sevenRolledAcknowledgementMessage[2] = PhotonNetwork.LocalPlayer.ActorNumber;
+                if (ShouldDiscard())
+                {
+                    sevenRolledAcknowledgementMessage[3] = 1;
+                    turnManager.SendMove(sevenRolledAcknowledgementMessage, false);
+
+                    GameObject.Find("DiscardController").GetComponent<DiscardController>().DiscardHalf(senderId);
+                }
+                else
+                {
+                    sevenRolledAcknowledgementMessage[3] = 0;
+                    turnManager.SendMove(sevenRolledAcknowledgementMessage, false);
+                }
+                    
+                break;
+            case MessageCode.SEVEN_ROLLED_ACKNOWLEDGEMENT:
+
+                recepientId = moveMessage[1];
+
+                // Only the player who rolled the 7 does this.
+                if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    haveToDiscard[acknowledged++] = moveMessage[3] == 1 ? true : false;
+
+                    if (acknowledged == PhotonNetwork.CurrentRoom.PlayerCount)
+                    {
+                        
+                        waitingForDiscardCount = 0;
+                        List<Player> playerList = new List<Player>();
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (haveToDiscard[i])
+                            {
+                                playerList.Add(PhotonNetwork.CurrentRoom.GetPlayer(i));
+                                waitingForDiscardCount++;
+                            }
+                        }
+                        if (waitingForDiscardCount != 0)
+                        {
+                            eventTextController.SetText(EventTextController.TextCode.SHOULD_DISCARD, null, playerList);
+                        }
+                    }
+                }
+                break;
+
+            case MessageCode.SEVEN_ROLLED_DISCARD_COMPLETE:
+
+                recepientId = moveMessage[1];
+
+                if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    // Find out who sent the message.
+                    senderId = moveMessage[2];
+
+                    // Notify event text to update.
+                    eventTextController.SetText(EventTextController.TextCode.SHOULD_DISCARD, PhotonNetwork.CurrentRoom.GetPlayer(senderId));
+
+                    // Check if it was the last person who was being waited on to send the discard complete message.
+
+                    waitingForDiscardCount--;
+
+                    if (waitingForDiscardCount == 0)
+                    {
+                        // Last person to discard. Continue on to the moving the bandit phase.
+                        MoveBandit();
+                    }
+                }
+                break;
         }
 
     }
@@ -437,9 +495,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
                 tradeController.Init(inventory);
-
-                // Claim an empty leaderboard slot.
-                ClaimLeaderboardSlot();
+                
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
                 setUpPhase = true;
@@ -696,21 +752,52 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         busy = false;
         // inform everyone
         Debug.Log("Dice rolled - " + diceValue);
+
         eventTextController.SetText(EventTextController.TextCode.DICE_ROLLED, PhotonNetwork.LocalPlayer, diceValue);
 
-        ResourceIncome(diceValue);
+        if (diceValue != 7)
+        {
+            ResourceIncome(diceValue);
 
-        // move on to action phase
+            // move on to action phase
+            DisableRollDiceButton();
+            EnableEndingTurn();
 
-        DisableRollDiceButton();
-        EnableEndingTurn();
+            currentPhase = Phase.TRADE_BUILD_IDLE;
 
-        currentPhase = Phase.TRADE_BUILD_IDLE;
+        } else
+        {
+            // Notify players that a 7 has been rolled.
+
+            int[] sevenRolledMessage = new int[2];
+            sevenRolledMessage[0] = (int)MessageCode.SEVEN_ROLLED_ANNOUNCEMENT;
+            sevenRolledMessage[1] = PhotonNetwork.LocalPlayer.ActorNumber;
+
+            acknowledged = 0;
+            haveToDiscard = new bool[4];
+
+
+            turnManager.SendMove(sevenRolledMessage, false);
+
+            // Logic continues once the player receives the sufficient amount of DISCARD_COMPLETE messages.
+            currentPhase = Phase.TRADE_BUILD_IDLE;
+
+        }
+
+        
     }
 
     public void EndTurnButtonPress()
     {
         Debug.Log("end turn button pressed");
+
+        // Close trade window if it was open.
+        BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
+        if (bottomPanel.TradePanelOpen())
+        {
+            bottomPanel.OpenTradeTab();
+        }
+
         DisableEndingTurn();
         EndLocalTurn();
     }
@@ -777,6 +864,20 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             eventTextController.SetText(EventTextController.TextCode.NO_RESOURCE_EARNED, PhotonNetwork.LocalPlayer);
         }
 
+    }
+
+    private bool ShouldDiscard()
+    {
+        return inventory.GetResourceCardCount() >= 8;
+    }
+
+    private void MoveBandit()
+    {
+        Debug.Log("Moving bandit!");
+
+        eventTextController.SetText(EventTextController.TextCode.BANDIT_MOVE, PhotonNetwork.LocalPlayer);
+
+        currentPhase = Phase.BANDIT_MOVE;
     }
 
 

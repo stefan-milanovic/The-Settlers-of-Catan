@@ -28,29 +28,74 @@ public class LeaderboardController : MonoBehaviour
     
     public void Init()
     {
-        //for (int i = 0; i < 4; i++)
-        //{
-        //    string key = "leaderboardSlot" + (i + 1);
-            
-        //    if ((int)PhotonNetwork.CurrentRoom.CustomProperties[key] != 0)
-        //    {
-        //        // leaderboard manager.setslot(playerid)
-        //        TakeSlot(i, (int)PhotonNetwork.CurrentRoom.CustomProperties[key]);
 
-        //    }
-        //}
     }
 
-    public void UpdateLeaderboard()
+    // Called when the local player earns some points.
+    public void UpdateLeaderboard(int localPlayerId, int newPoints)
     {
+         photonView.RPC("RPCUpdateLeaderboard", RpcTarget.All, localPlayerId, newPoints);
+    }
 
+    [PunRPC]
+    private void RPCUpdateLeaderboard(int playerId, int newPoints)
+    {
+        // Calculate new standings.
+
+        int[] playersSorted = new int [PhotonNetwork.CurrentRoom.PlayerCount];
+        int[] pointsSorted = new int[PhotonNetwork.CurrentRoom.PlayerCount];
+
+        for (int l = 0; l < playersSorted.Length; l++)
+        {
+            playersSorted[l] = l + 1;
+        }
+        pointsSorted[playerId - 1] = newPoints;
+        foreach (PlayerSlot slot in playerSlots)
+        {
+            if (!slot.Initialised) { continue; }
+
+            if (slot.PlayerId != playerId)
+            {
+                pointsSorted[slot.PlayerId - 1] = slot.Score;
+            }
+        }
+
+        // Sort descending.
+
+        for (int i = 0; i < PhotonNetwork.CurrentRoom.PlayerCount - 1; i++)
+        {
+            for (int j = i + 1; j < PhotonNetwork.CurrentRoom.PlayerCount; j++)
+            {
+                if (pointsSorted[i] < pointsSorted[j])
+                {
+                    int playerTemp = playersSorted[i];
+                    int pointTemp = pointsSorted[i];
+
+                    playersSorted[i] = playersSorted[j];
+                    pointsSorted[i] = pointsSorted[j];
+
+                    playersSorted[j] = playerTemp;
+                    pointsSorted[j] = playerTemp;
+                }
+            }
+        }
+
+        // Assign to slots.
+
+        int r = 0;
+        foreach (PlayerSlot slot in playerSlots)
+        {
+            if (!slot.Initialised) continue;
+
+            slot.SetPlayer(playersSorted[r], pointsSorted[r]);
+            r++;
+        }
     }
 
     public void TakeSlot(int slotId, int playerId)
     {
         if (photonView.IsMine)
         {
-
             photonView.RPC("RPCTakeSlot", RpcTarget.All, slotId, playerId);
         }
     }
@@ -60,6 +105,8 @@ public class LeaderboardController : MonoBehaviour
     {
         PlayerSlot slot = playerSlots[slotId];
 
-        slot.SetPlayer(playerId);
+        // When a slot is taken, the score for that player is 1.
+        slot.Init();
+        slot.SetPlayer(playerId, 1);
     }
 }

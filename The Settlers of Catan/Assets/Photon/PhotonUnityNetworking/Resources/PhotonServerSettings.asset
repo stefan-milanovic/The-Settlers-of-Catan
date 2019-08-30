@@ -48,5 +48,6 @@ MonoBehaviour:
   - RPCConstructCity
   - RPCTakeSlot
   - RPCSetCurrentPlayer
+  - RPCUpdateLeaderboard
   DisableAutoOpenWizard: 1
   ShowSettings: 1

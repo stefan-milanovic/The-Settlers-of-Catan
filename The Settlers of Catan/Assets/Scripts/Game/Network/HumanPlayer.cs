@@ -63,16 +63,11 @@ public class HumanPlayer : GamePlayer
 
             // Connect to Turn Manager - ONLY LOCAL PLAYER CALLS THIS.
             ConnectToTurnManager();
-
-
-            leaderboardController = GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>();
-            
             
         }
     }
     
-
-    //
+    
     public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
     {
 
@@ -90,15 +85,14 @@ public class HumanPlayer : GamePlayer
 
                     if (propertiesThatChanged.ContainsKey(key) && (int)propertiesThatChanged[key] != 0)
                     {
-                        // leaderboard manager.setslot(playerid)
-                        leaderboardController.TakeSlot(i, (int)propertiesThatChanged[key]);
+
+                        GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().TakeSlot(i, (int)propertiesThatChanged[key]);
 
                     }
                 }
             }
             
         }
-        
         
     }
 
@@ -175,6 +169,11 @@ public class HumanPlayer : GamePlayer
                 selectedConstructionCard = null;
                 currentPhase = Phase.TRADE_BUILD_IDLE;
             }
+
+            if (currentPhase == Phase.BANDIT_MOVE)
+            {
+                SelectBanditHex();
+            }
         }
         
     }
@@ -202,6 +201,7 @@ public class HumanPlayer : GamePlayer
                         i.ConstructSettlement(PhotonNetwork.LocalPlayer.ActorNumber);
                         
                         inventory.TakeFromPlayer(Inventory.UnitCode.SETTLEMENT, 1);
+                        inventory.AddVictoryPoint(Inventory.UnitCode.SETTLEMENT);
 
                         if (i.OnHarbour(out HarbourPath.HarbourBonus? bonus))
                         {
@@ -218,6 +218,9 @@ public class HumanPlayer : GamePlayer
                         }
                         else if (currentTurn == 2)
                         {
+                            // The player now gets his starting resources.
+                            inventory.GrantStartingResources(i);
+
                             currentPhase = Phase.SECOND_ROAD_PLACEMENT;
                         }
                         else
@@ -317,6 +320,7 @@ public class HumanPlayer : GamePlayer
 
                         inventory.GiveToPlayer(Inventory.UnitCode.SETTLEMENT, 1); // Return 1 settlement to the player's stock.
                         inventory.TakeFromPlayer(Inventory.UnitCode.CITY, 1); // Take 1 city from the player's stock.
+                        inventory.AddVictoryPoint(Inventory.UnitCode.CITY);
 
                         inventory.PayCityConstruction();
                         currentPhase = Phase.TRADE_BUILD_IDLE;
@@ -324,6 +328,37 @@ public class HumanPlayer : GamePlayer
                 }
             }
 
+        }
+    }
+
+    protected void SelectBanditHex()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                //Debug.Log(hit.collider.name);
+                if (hit.collider.tag == "Hex") // click on another player, enemy, building
+                {
+                    Hex hex = hit.collider.transform.parent.GetComponent<Hex>();
+
+                    if (!hex.OccupiedByBandit())
+                    {
+                        // Remove the bandit from the previous hex.
+                        Hex banditHex = Hex.GetBanditHex();
+                        banditHex.RemoveBandit();
+
+                        // Move the bandit to this hex.
+
+                        hex.OccupyByBandit();
+
+                        // Move to steal phase.
+                    }
+                   
+                }
+            }
         }
     }
 }

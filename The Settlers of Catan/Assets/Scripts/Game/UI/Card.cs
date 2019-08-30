@@ -194,20 +194,30 @@ public class Card : MonoBehaviour
         }
 
 
-        // Resource cards -- check if the player is in trade, if it is drop into trade menu and reduce current cost
-        // also check if the card is in the inventory or not
+        // Resource cards -- Clicking on these is possible if the player is currently trading or discarding their hand.
 
         if (IsResourceCard())
         {
             TradeController tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
+            DiscardController discardController = GameObject.Find("DiscardController").GetComponent<DiscardController>();
+
             // Check if it's in the inventory or in the trade slot.
             if (gameObject.tag == "InventoryCard")
             {
-                if (!tradeController.IsTrading()) { return; }
-
-                // Move 1 stock from the inventory to the local offers slot.
-                inventory.TakeFromPlayer(this.unitCode, 1);
-                tradeController.OfferResource(this.unitCode, 1);
+                
+                if (tradeController.IsTrading())
+                {
+                    // Move 1 stock from the inventory to the local offers slot.
+                    inventory.TakeFromPlayer(this.unitCode, 1);
+                    tradeController.OfferResource(this.unitCode, 1);
+                }
+                else if (discardController.IsDiscarding())
+                {
+                    // Move 1 stock from the inventory to the discard slot.
+                    inventory.TakeFromPlayer(this.unitCode, 1);
+                    discardController.DiscardResource(this.unitCode, 1);
+                }
+                
                 
             }
             else if (gameObject.tag == "TradeCard")
@@ -228,6 +238,13 @@ public class Card : MonoBehaviour
                         tradeController.SupplyCardChosen(this.unitCode, 1);
                     }
                 }
+            }
+            else if (gameObject.tag == "DiscardCard")
+            {
+                // Move 1 stock from the discard panel to the inventory.
+
+                inventory.GiveToPlayer(this.unitCode, 1);
+                discardController.RetractResourceDiscard(this.unitCode, 1);
             }
         }
     }

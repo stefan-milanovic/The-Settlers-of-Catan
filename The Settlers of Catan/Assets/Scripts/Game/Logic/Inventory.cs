@@ -64,7 +64,13 @@ public class Inventory : MonoBehaviour
         }
         
     }
-    
+
+    public int GetResourceCardCount()
+    {
+        return stock[(int)UnitCode.BRICK] + stock[(int)UnitCode.GRAIN] + stock[(int)UnitCode.LUMBER] + stock[(int)UnitCode.ORE] + stock[(int)UnitCode.WOOL];
+    }
+
+
     public void SetPlayer(GamePlayer p)
     {
         myPlayer = p;
@@ -75,6 +81,24 @@ public class Inventory : MonoBehaviour
 
     public int[] getStock() { return stock; }
 
+
+    // The player receives one resource card for each hex adjacent to their second-placed settlement (i).
+    public void GrantStartingResources(Intersection i)
+    {
+        Hex[] allHexes = FindObjectsOfType<Hex>();
+        List<Hex> adjacentHexes = new List<Hex>();
+        foreach (Hex hex in allHexes)
+        {
+            if (hex.HasIntersection(i))
+            {
+                if (hex.GetResource() != Hex.Resource.NO_RESOURCE)
+                {
+                    GiveToPlayer((UnitCode)hex.GetResource(), 1);
+                }
+                
+            }
+        }
+    }
     public void TakeFromPlayer(UnitCode unit, int amount)
     {
         if (amount > stock[(int)unit])
@@ -88,8 +112,7 @@ public class Inventory : MonoBehaviour
         cards[(int)unit].UpdateCard(stock[(int)unit]);
 
         UpdateConstructionCards();
-
-        UpdatePlayerScore();
+        
     }
 
     public void GiveToPlayer(UnitCode unit, int amount)
@@ -100,22 +123,9 @@ public class Inventory : MonoBehaviour
         cards[(int)unit].UpdateCard(stock[(int)unit]);
 
         UpdateConstructionCards();
-
-        UpdatePlayerScore();
-    }
-
-    private void UpdatePlayerScore()
-    {
-        int constructedSettlements = START_SETTLEMENT_COUNT - stock[(int)UnitCode.SETTLEMENT];
-        int constructedCities = START_CITY_COUNT - stock[(int)UnitCode.CITY];
-
-        playerScore = constructedSettlements + constructedCities * 2 + stock[(int)UnitCode.LARGEST_ARMY] * 2 + stock[(int)UnitCode.LONGEST_ROAD] * 2;
-
-        playerHiddenScore = playerScore + stock[(int)UnitCode.VICTORY_CARD];
         
-
-    }   
-
+    }
+    
     private void UpdateConstructionCards()
     {
         for (UnitCode i = UnitCode.ROAD; i <= UnitCode.CITY; i++)
@@ -153,4 +163,58 @@ public class Inventory : MonoBehaviour
     }
 
     public List<HarbourPath.HarbourBonus> GetHarbourBonuses() { return this.harbourBonuses; }
+    
+    public void AddVictoryPoint(UnitCode pointSource)
+    {
+        
+        switch (pointSource)
+        {
+            case UnitCode.SETTLEMENT:
+                playerScore++;
+                break;
+            case UnitCode.CITY:
+                // Also increase the score by only 1 because a settlement was removed (-1 score) and a city was added (+2 score).
+                playerScore++;
+                break;
+        }
+
+        if (playerScore == 1)
+        {
+            // Claim an empty leaderboard slot.
+            ClaimLeaderboardSlot();
+        }
+        else
+        {
+            // Update the leaderboard.
+            GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().UpdateLeaderboard(PhotonNetwork.LocalPlayer.ActorNumber, playerScore);
+        }
+
+        
+    }
+
+    private void ClaimLeaderboardSlot()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            string key = "leaderboardSlot" + (i + 1);
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
+            {
+                [key] = PhotonNetwork.LocalPlayer.ActorNumber
+            },
+            new ExitGames.Client.Photon.Hashtable
+            {
+                [key] = 0
+            });
+
+            if ((int)PhotonNetwork.CurrentRoom.CustomProperties[key] == 0)
+            {
+                // This slot will be taken -- leave the loop.
+                Debug.Log("Player " + PhotonNetwork.LocalPlayer.ActorNumber + " got slot: " + key);
+                break;
+            }
+        }
+    }
+
+
 }

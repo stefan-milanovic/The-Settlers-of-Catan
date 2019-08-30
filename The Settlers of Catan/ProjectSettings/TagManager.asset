@@ -41,6 +41,7 @@ TagManager:
   - EndTurnButton
   - InventoryCard
   - TradeCard
+  - DiscardCard
   layers:
   - Default
   - TransparentFX

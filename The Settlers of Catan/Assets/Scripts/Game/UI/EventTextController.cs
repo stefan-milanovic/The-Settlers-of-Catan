@@ -2,6 +2,7 @@
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -42,10 +43,14 @@ public class EventTextController : MonoBehaviour
         PRE_DICE_ROLL,
         DICE_ROLLED,
         RESOURCE_EARNED,
-        NO_RESOURCE_EARNED
+        NO_RESOURCE_EARNED,
+        SHOULD_DISCARD,
+        BANDIT_MOVE
     };
     
     private bool busy = false;
+
+    private List<Player> discardList;
 
     // Start is called before the first frame update
     void Start()
@@ -102,7 +107,17 @@ public class EventTextController : MonoBehaviour
 
     public void SetText(TextCode code, Player player, params object[] additionalParams)
     {
-        string message = GetMessage(code, player.ActorNumber, additionalParams);
+        string message;
+
+        if (player != null)
+        {
+            message = GetMessage(code, player.ActorNumber, additionalParams);
+        }
+        else
+        {
+            message = GetMessage(code, -1, additionalParams);
+        }
+        
         photonView.RPC("RPCSetText", RpcTarget.All, message);
     }
     
@@ -114,6 +129,7 @@ public class EventTextController : MonoBehaviour
     [PunRPC]
     public void RPCSetText(string newText)
     {
+        Debug.Log("Setting text - " + newText);
         eventText.text = newText;
     }
 
@@ -165,7 +181,67 @@ public class EventTextController : MonoBehaviour
             case TextCode.NO_RESOURCE_EARNED:
 
                 return "No player has earned any resources from this roll.";
+            case TextCode.SHOULD_DISCARD:
+                
+                string resultText = "Waiting for ";
+
+                if (actorNumber == -1)
+                {
+                    // Initial set.
+                    discardList = (List<Player>)additionalParams[0];
+
+                    bool first = true;
+                    for (int i = 0; i < discardList.Count; i++)
+                    {
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            resultText += ", ";
+                        }
+                        resultText += "<color=" + discardList[i].CustomProperties["colour"] + ">" + discardList[i].CustomProperties["username"] + "</color>";
+                       
+                    }
+                    resultText += " to discard half of their resource cards.";
+                }
+                else
+                {
+                    // Update. Remove the player from the discard list and then repeat.
+                    Player foundPlayer = discardList.Find(p => p.ActorNumber == actorNumber);
+                    if (foundPlayer != null)
+                    {
+                        discardList.Remove(foundPlayer);
+                    }
+
+                    bool first = true;
+                    for (int i = 0; i < discardList.Count; i++)
+                    {
+                        if (discardList[i] != null)
+                        {
+                            if (first)
+                            {
+                                first = false;
+                            }
+                            else
+                            {
+                                resultText += ", ";
+                            }
+                            resultText += "<color=" + discardList[i].CustomProperties["colour"] + ">" + discardList[i].CustomProperties["username"] + "</color>";
+                        }
+                    }
+                    resultText += " to discard half of their resource cards!";
+
+                }
+
+                Debug.Log(resultText);
+                return resultText;
+
+            case TextCode.BANDIT_MOVE:
+                return "Waiting for " + "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " to move the bandit to another hex.";
         }
+        
 
         return "<invalid_text_code>";
     }

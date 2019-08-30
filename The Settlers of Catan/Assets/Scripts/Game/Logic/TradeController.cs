@@ -94,6 +94,10 @@ public class TradeController : MonoBehaviour
 
         this.inventory = inventory;
 
+        // Initialize the discard controller.
+
+        GameObject.Find("DiscardController").GetComponent<DiscardController>().SetInventory(inventory);
+
         // Fill in button info with other players' usernames.
 
         for (int i = 0, j = 0; i < 4; i++)
@@ -306,7 +310,11 @@ public class TradeController : MonoBehaviour
         GameObject.Find("BottomPanel").GetComponent<BottomPanel>().OpenTradeTab(); // toggles the trade tab
         offersPanel.SetActive(true);
 
-        confirmed = false; // Neither player has confirmed yet.
+        confirmed = false;
+        foreach (GameObject panel in localPanels)
+        {
+            panel.GetComponent<Image>().color = new Color(1f, 1f, 1f);
+        }
         LockRemotePanel();
 
         trading = true;
@@ -449,8 +457,13 @@ public class TradeController : MonoBehaviour
     {
         offersPanel.SetActive(true);
 
-        confirmed = false; // Neither player has confirmed yet.
-        otherConfirmed = false;
+
+        confirmed = false;
+        foreach (GameObject panel in localPanels)
+        {
+            panel.GetComponent<Image>().color = new Color(1f, 1f, 1f);
+        }
+        UnlockRemotePanel();
 
         trading = true;
         clearRemoteButton.SetActive(false);
