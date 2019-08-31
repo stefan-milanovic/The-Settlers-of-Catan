@@ -245,6 +245,7 @@ public class HumanPlayer : GamePlayer
                             // Inform event text controller.
                             eventTextController.SendEvent(EventTextController.EventCode.SETTLEMENT_CONSTRUCTED, PhotonNetwork.LocalPlayer);
 
+                            eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
                             currentPhase = Phase.TRADE_BUILD_IDLE;
                         }
                     }
@@ -299,7 +300,7 @@ public class HumanPlayer : GamePlayer
                         {
                             // Pay resources
                             inventory.PayRoadConstruction();
-                            currentPhase = Phase.TRADE_BUILD_IDLE;
+                            
 
                             p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
 
@@ -308,6 +309,9 @@ public class HumanPlayer : GamePlayer
                             // Inform event text.
 
                             eventTextController.SendEvent(EventTextController.EventCode.ROAD_CONSTRUCTED, PhotonNetwork.LocalPlayer);
+
+                            eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
+                            currentPhase = Phase.TRADE_BUILD_IDLE;
 
                             myPaths.Add(p);
                         }
@@ -348,6 +352,7 @@ public class HumanPlayer : GamePlayer
 
                         eventTextController.SendEvent(EventTextController.EventCode.CITY_CONSTRUCTED, PhotonNetwork.LocalPlayer);
 
+                        eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
                         currentPhase = Phase.TRADE_BUILD_IDLE;
                     }
                 }
@@ -364,7 +369,7 @@ public class HumanPlayer : GamePlayer
 
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                //Debug.Log(hit.collider.name);
+                Debug.Log(hit.collider.name);
                 if (hit.collider.tag == "Hex") // click on another player, enemy, building
                 {
                     Hex hex = hit.collider.transform.GetComponent<Hex>();

@@ -32,13 +32,20 @@ public class EventTextController : MonoBehaviour
         CITY_CONSTRUCTED,
         PRE_DICE_ROLL,
         DICE_ROLLED,
+        PLAYER_IDLE,
         RESOURCE_EARNED,
         NO_RESOURCE_EARNED,
+        TRADE_SUPPLY_INITIATED,
+        TRADE_PLAYERS_INITIATED,
+        TRADE_CANCELLED,
+        TRADE_SUPPLY_COMPLETED,
+        TRADE_PLAYERS_COMPLETED,
         SHOULD_DISCARD,
         BANDIT_MOVE,
         STEAL_NO_ADJACENT_PLAYER,
         NO_RESOURCE_STOLEN,
         RESOURCE_STOLEN,
+        END_TURN,
         GAME_OVER
     };
     
@@ -48,7 +55,7 @@ public class EventTextController : MonoBehaviour
 
 
     private Queue<string> messageQueue = new Queue<string>();
-    private bool incomingNewMessage = false;
+    private bool incomingNewMessage = true;
 
     private bool firstPass;
 
@@ -65,6 +72,11 @@ public class EventTextController : MonoBehaviour
     {
         
     }
+
+    public bool IsBusy()
+    {
+        return incomingNewMessage == true;
+    } 
 
     public void Init()
     {
@@ -85,25 +97,28 @@ public class EventTextController : MonoBehaviour
 
     public void SendEvent(EventCode messageCode, Player sender, params object[] additionalParams)
     {
-        photonView.RPC("RPCEventReceived", RpcTarget.All, messageCode, sender.ActorNumber, additionalParams);
+        photonView.RPC("RPCEventReceived", RpcTarget.All, messageCode, sender != null ? sender.ActorNumber : -1, additionalParams);
     }
 
     [PunRPC]
     private void RPCEventReceived(EventCode messageCode, int senderId, params object[] additionalParams)
     {
+        
         string message = GetMessage(messageCode, senderId, additionalParams);
-
-        incomingNewMessage = true;
         messageQueue.Enqueue(message);
+        incomingNewMessage = true;
 
     }
     
     private IEnumerator FadeOutPanel()
     {
         eventPanel.GetComponent<CanvasGroup>().alpha = 1;
-
-        firstPass = true;
-        yield return new WaitForSeconds(1);
+        
+        if (firstPass)
+        {
+            yield return new WaitForSeconds(3);
+        }
+        
 
         for (float f = 1f; f >= -0.025f; f -= 0.025f)
         {
@@ -153,12 +168,12 @@ public class EventTextController : MonoBehaviour
     {
         SetText(currentMessage = messageQueue.Dequeue());
 
-        if (messageQueue.Empty())
+        if (messageQueue.Count == 0)
         {
             incomingNewMessage = false;
         }
-
-        audioSource.Play();
+        
+        firstPass = true;
 
         StartCoroutine(FadeOutPanel());
 
@@ -175,12 +190,14 @@ public class EventTextController : MonoBehaviour
         switch (code)
         {
             case EventCode.FIRST_TURN_PHASE_ONE:
+                audioSource.Play();
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + "</color>" + " is placing their first settlement.";
                 
             case EventCode.FIRST_TURN_PHASE_TWO:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their first road.";
                
             case EventCode.SECOND_TURN_PHASE_ONE:
+                audioSource.Play();
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their second settlement.";
                 
             case EventCode.SECOND_TURN_PHASE_TWO:
@@ -192,6 +209,7 @@ public class EventTextController : MonoBehaviour
             case EventCode.CITY_CONSTRUCTED:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " upgraded a settlement into a city.";
             case EventCode.PRE_DICE_ROLL:
+                audioSource.Play();
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is rolling the dice.";
                 
             case EventCode.DICE_ROLLED:
@@ -211,7 +229,9 @@ public class EventTextController : MonoBehaviour
                     diceValueString += "</color>";
                 }
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has rolled a " + diceValueString + ".";
+            case EventCode.PLAYER_IDLE:
 
+                return "Waiting for an action from " + ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + ".";
             case EventCode.RESOURCE_EARNED:
 
                 int resourceType = (int)additionalParams[0];
@@ -224,6 +244,22 @@ public class EventTextController : MonoBehaviour
             case EventCode.NO_RESOURCE_EARNED:
 
                 return "No player has earned any resources from this roll.";
+            case EventCode.TRADE_SUPPLY_INITIATED:
+
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is trading with the supply.";
+            case EventCode.TRADE_PLAYERS_INITIATED:
+                int secondPlayerId = (int)additionalParams[0];
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is trading with " + ColourUtility.GetPlayerDisplayNameFromId(secondPlayerId) + ".";
+            case EventCode.TRADE_CANCELLED:
+
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has cancelled the trade.";
+            case EventCode.TRADE_SUPPLY_COMPLETED:
+
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has finished trading with the supply.";
+            case EventCode.TRADE_PLAYERS_COMPLETED:
+                secondPlayerId = (int)additionalParams[0];
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has finished trading with " + ColourUtility.GetPlayerDisplayNameFromId(secondPlayerId) + ".";
+
             case EventCode.SHOULD_DISCARD:
                 
                 string resultText = "Waiting for ";
@@ -295,6 +331,8 @@ public class EventTextController : MonoBehaviour
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " stole 1x" + resourceText + " from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
             case EventCode.GAME_OVER:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has won the game! Press ESC to return to the main menu.";
+            case EventCode.END_TURN:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has ended their turn.";
         }
         
 

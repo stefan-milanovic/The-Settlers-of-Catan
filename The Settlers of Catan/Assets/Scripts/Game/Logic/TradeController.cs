@@ -178,6 +178,7 @@ public class TradeController : MonoBehaviour
             {
                 // Trade accepted.
                 tradeRequestStatusPanel.SetActive(false);
+                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_PLAYERS_INITIATED, PhotonNetwork.LocalPlayer, recepientId);
                 InitOffersPanel();
                 yield break;
             }
@@ -346,6 +347,8 @@ public class TradeController : MonoBehaviour
             // Specifically for supply trading.
             card.SetEnabled(true);
         }
+
+        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_SUPPLY_INITIATED, PhotonNetwork.LocalPlayer);
     }
 
     private void SupplyOnOfferChanged()
@@ -494,6 +497,7 @@ public class TradeController : MonoBehaviour
             card.SetInventory(inventory);
             card.UpdateCard(0);
         }
+        
     }
 
     public bool IsLocalCard(Card card)
@@ -560,6 +564,8 @@ public class TradeController : MonoBehaviour
         tradeCancelledMessage[1] = (amRecepient) ? senderId : recepientId; // Who should read the message?
 
         GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(tradeCancelledMessage, false);
+
+        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_CANCELLED, PhotonNetwork.LocalPlayer);
 
         // Cancel trade locally.
 
@@ -748,12 +754,17 @@ public class TradeController : MonoBehaviour
             tradeExecuteMessage[1] = (amRecepient) ? senderId : recepientId; // Who should read the message?
 
             GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(tradeExecuteMessage, false);
+            
+            GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_PLAYERS_COMPLETED, PhotonNetwork.CurrentRoom.GetPlayer(senderId), recepientId);
+            
+            
 
             PerformResourceExchange();
         } else
         {
             if (AvailableCards == 0)
             {
+                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_SUPPLY_COMPLETED, PhotonNetwork.LocalPlayer);
                 PerformResourceExchange();
             }
             else

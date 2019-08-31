@@ -1,4 +1,5 @@
-﻿using Photon.Pun;
+﻿using ExitGames.Client.Photon;
+using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,10 +28,14 @@ public class Dice : MonoBehaviour
     [SerializeField]
     private DiceController diceController;
 
+    private bool justGotOwnership;
+
     public int getDiceValue()
     {
         return diceValue;
     }
+
+    
 
     // Start is called before the first frame update
     void Start()
@@ -47,10 +52,23 @@ public class Dice : MonoBehaviour
 
         if (!photonView.IsMine) { return; }
         
+        // Reset if you're reaching this after being reset.
+
+        if (justGotOwnership)
+        {
+            Debug.Log("jgo");
+            justGotOwnership = false;
+            rigidBody.constraints = RigidbodyConstraints.FreezeAll;
+        }
+
         if (rigidBody.IsSleeping() && !hasLanded && thrown)
         {
             hasLanded = true;
             rigidBody.useGravity = false;
+
+            // Freeze movement.
+            rigidBody.freezeRotation = true;
+            rigidBody.constraints = RigidbodyConstraints.FreezeAll;
             SideValueCheck();
             
         }
@@ -65,6 +83,7 @@ public class Dice : MonoBehaviour
     {
 
         Reset();
+        
 
         if (!thrown && !hasLanded)
         {
@@ -85,6 +104,7 @@ public class Dice : MonoBehaviour
         thrown = false;
         hasLanded = false;
         rigidBody.useGravity = false;
+        rigidBody.constraints = RigidbodyConstraints.None;
     }
 
     private void RollAgain()
@@ -113,5 +133,8 @@ public class Dice : MonoBehaviour
     public void SetOwner(Player owner)
     {
         photonView.TransferOwnership(owner);
+        justGotOwnership = true;
     }
+
+    
 }

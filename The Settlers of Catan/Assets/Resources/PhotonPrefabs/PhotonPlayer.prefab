@@ -68,4 +68,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inventoryPrefab: {fileID: 1887940815657987129, guid: d512028f769c7574789e53b8b8b29241,
     type: 3}
-  turnManagerPrefab: {fileID: 0}

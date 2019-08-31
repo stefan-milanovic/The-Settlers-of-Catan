@@ -212,7 +212,7 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
             case EvRegisterPlayer:
                 {
                     playersConnected++;
-                    if (playersConnected == 1)
+                    if (playersConnected == NUMBER_OF_PLAYERS)
                     {
                         // Only the master client starts the game once all the players join.
                         if (PhotonNetwork.IsMasterClient)

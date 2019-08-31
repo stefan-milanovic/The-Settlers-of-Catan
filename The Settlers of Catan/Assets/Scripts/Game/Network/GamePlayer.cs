@@ -74,9 +74,6 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     [SerializeField]
     protected GameObject inventoryPrefab;
 
-    [SerializeField]
-    protected GameObject turnManagerPrefab;
-
     protected PhotonView photonView;
 
     protected TurnManager turnManager;
@@ -256,8 +253,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     {
         Debug.Log("Player id = " + PhotonNetwork.LocalPlayer.ActorNumber + " ending their turn.");
         myTurn = false;
-        
 
+        eventTextController.SendEvent(EventTextController.EventCode.END_TURN, PhotonNetwork.LocalPlayer);
         turnManager.SendMove(null, true);
     }
 
@@ -484,7 +481,11 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     // Check which resource the player sent you.
 
                     inventory.ReceiveStolenCard(sender.ActorNumber, moveMessage[2]);
-                    SetPhase(GamePlayer.Phase.TRADE_BUILD_IDLE);
+                    DisableRollDiceButton();
+                    EnableEndingTurn();
+
+                    eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
+                    currentPhase = Phase.TRADE_BUILD_IDLE;
                 }
                 break;
 
@@ -802,6 +803,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             DisableRollDiceButton();
             EnableEndingTurn();
 
+            eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
             currentPhase = Phase.TRADE_BUILD_IDLE;
 
         } else
@@ -814,13 +816,11 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             acknowledged = 0;
             haveToDiscard = new bool[4];
-
-
-            turnManager.SendMove(sevenRolledMessage, false);
-
+            
             // Logic continues once the player receives the sufficient amount of DISCARD_COMPLETE messages.
             currentPhase = Phase.TRADE_BUILD_IDLE;
 
+            turnManager.SendMove(sevenRolledMessage, false);
         }
 
         
@@ -945,6 +945,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         if (playerIdList.Count == 0)
         {
             eventTextController.SendEvent(EventTextController.EventCode.STEAL_NO_ADJACENT_PLAYER, PhotonNetwork.LocalPlayer);
+            DisableRollDiceButton();
+            EnableEndingTurn();
+
+            eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
             currentPhase = Phase.TRADE_BUILD_IDLE;
         }
         else

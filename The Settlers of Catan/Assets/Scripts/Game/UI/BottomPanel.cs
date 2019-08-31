@@ -72,7 +72,7 @@ public class BottomPanel : MonoBehaviour
 
         GamePlayer localPlayer = GamePlayer.FindLocalPlayer();
 
-        if (!localPlayer.IsMyTurn() || localPlayer.GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE)
+        if (!localPlayer.IsMyTurn() || localPlayer.GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE || GameObject.Find("TradeController").GetComponent<TradeController>().IsTrading() || GameObject.Find("TradeController").GetComponent<TradeController>().IsSupplyTrading())
         {
             return;
         }

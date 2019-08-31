@@ -46,12 +46,20 @@ public class Inventory : MonoBehaviour
     private int playerScore = 0;
     private int hiddenPlayerScore = 0;
 
+    private int settlementsOnBoard = 0;
+    private int citiesOnBoard = 0;
+
     private List<HarbourPath.HarbourBonus> harbourBonuses = new List<HarbourPath.HarbourBonus>();
 
     private GamePlayer myPlayer;
+
+    private OverviewController overviewController;
     
     public void Start()
     {
+
+        this.overviewController = GameObject.Find("OverviewController").GetComponent<OverviewController>();
+
         // Connect to inventory cards (do not initialise trade cards).
         Card[] cardList = FindObjectsOfType<Card>();
         foreach (Card card in cardList)
@@ -112,6 +120,11 @@ public class Inventory : MonoBehaviour
 
         cards[(int)unit].UpdateCard(stock[(int)unit]);
 
+        if (unit >= UnitCode.BRICK && unit <= UnitCode.WOOL)
+        {
+            UpdateResourceTotal();
+        }
+
         UpdateConstructionCards();
         
     }
@@ -123,6 +136,11 @@ public class Inventory : MonoBehaviour
 
         cards[(int)unit].UpdateCard(stock[(int)unit]);
 
+        if (unit >= UnitCode.BRICK && unit <= UnitCode.WOOL)
+        {
+            UpdateResourceTotal();
+        }
+
         UpdateConstructionCards();
         
     }
@@ -133,6 +151,12 @@ public class Inventory : MonoBehaviour
         {
             cards[(int)i].UpdateCard(stock[(int)i]);
         }
+    }
+
+    private void UpdateResourceTotal()
+    {
+        
+        overviewController.SetTotalCardsText(GetResourceCardCount());
     }
 
     public void PayRoadConstruction()
@@ -173,9 +197,19 @@ public class Inventory : MonoBehaviour
             case UnitCode.SETTLEMENT:
                 playerScore++;
                 hiddenPlayerScore++;
+
+                settlementsOnBoard++;
+                overviewController.SetVictoryPoint(UnitCode.SETTLEMENT, settlementsOnBoard);
                 break;
             case UnitCode.CITY:
                 // Also increase the score by only 1 because a settlement was removed (-1 score) and a city was added (+2 score).
+
+                settlementsOnBoard--;
+                citiesOnBoard++;
+
+                overviewController.SetVictoryPoint(UnitCode.SETTLEMENT, settlementsOnBoard);
+                overviewController.SetVictoryPoint(UnitCode.CITY, citiesOnBoard * 2);
+
                 playerScore++;
                 hiddenPlayerScore++;
                 break;
