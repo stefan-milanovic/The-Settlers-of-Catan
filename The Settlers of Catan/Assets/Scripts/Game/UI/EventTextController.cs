@@ -12,34 +12,24 @@ public class EventTextController : MonoBehaviour
     private TextMeshProUGUI eventText;
 
     [SerializeField]
+    private GameObject eventPanel;
+
+    [SerializeField]
     private TextMeshProUGUI currentPlayerText;
 
+    [SerializeField]
+    private AudioSource audioSource;
+
     private PhotonView photonView;
-
-    private readonly string[] resourceColours =
-    {
-        "red",
-        "yellow",
-        "green",
-        "blue",
-        "orange"
-    };
-
-    private readonly string[] resourceNames =
-    {
-        "Brick",
-        "Grain",
-        "Lumber",
-        "Ore",
-        "Wool"
-    }; 
-
-    public enum TextCode
+    public enum EventCode
     {
         FIRST_TURN_PHASE_ONE,
         FIRST_TURN_PHASE_TWO,
         SECOND_TURN_PHASE_ONE,
         SECOND_TURN_PHASE_TWO,
+        SETTLEMENT_CONSTRUCTED,
+        ROAD_CONSTRUCTED,
+        CITY_CONSTRUCTED,
         PRE_DICE_ROLL,
         DICE_ROLLED,
         RESOURCE_EARNED,
@@ -56,6 +46,14 @@ public class EventTextController : MonoBehaviour
 
     private List<Player> discardList;
 
+
+    private Queue<string> messageQueue = new Queue<string>();
+    private bool incomingNewMessage = false;
+
+    private bool firstPass;
+
+    private string currentMessage;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -70,18 +68,10 @@ public class EventTextController : MonoBehaviour
 
     public void Init()
     {
-
-        eventText.text = "Waiting for all players to connect...";
-
-    }
-
-    [PunRPC]
-    private void RPCInit()
-    {
-        
+        messageQueue.Enqueue("Waiting for all players to connect...");
+        StartCoroutine(AcceptNewMessage());
     }
     
-
     public void SetCurrentPlayer(Player player)
     {
         photonView.RPC("RPCSetCurrentPlayer", RpcTarget.All, player.ActorNumber);
@@ -90,75 +80,121 @@ public class EventTextController : MonoBehaviour
     [PunRPC]
     private void RPCSetCurrentPlayer(int playerId)
     {
-        Player player = PhotonNetwork.CurrentRoom.GetPlayer(playerId);
-        currentPlayerText.text = "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>";
+        currentPlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(playerId);
     }
 
-    public void AddToQueue(TextCode code, Player player, params object[] additionalParams)
+    public void SendEvent(EventCode messageCode, Player sender, params object[] additionalParams)
     {
-        string message = GetMessage(code, player.ActorNumber, additionalParams);
-        StartCoroutine(DisplayMessage(message));
+        photonView.RPC("RPCEventReceived", RpcTarget.All, messageCode, sender.ActorNumber, additionalParams);
     }
 
-    private IEnumerator DisplayMessage(string message)
+    [PunRPC]
+    private void RPCEventReceived(EventCode messageCode, int senderId, params object[] additionalParams)
     {
-        while (busy) { yield return null;  }
-        busy = true;
-        SetText(message);
-        yield return new WaitForSeconds(3);
-        busy = false;
+        string message = GetMessage(messageCode, senderId, additionalParams);
+
+        incomingNewMessage = true;
+        messageQueue.Enqueue(message);
+
     }
-
-    public void SetText(TextCode code, Player player, params object[] additionalParams)
+    
+    private IEnumerator FadeOutPanel()
     {
-        string message;
+        eventPanel.GetComponent<CanvasGroup>().alpha = 1;
 
-        if (player != null)
+        firstPass = true;
+        yield return new WaitForSeconds(1);
+
+        for (float f = 1f; f >= -0.025f; f -= 0.025f)
         {
-            message = GetMessage(code, player.ActorNumber, additionalParams);
+            if (incomingNewMessage && !firstPass)
+            {
+                StartCoroutine(AcceptNewMessage());
+                yield break;
+            }
+
+            eventPanel.GetComponent<CanvasGroup>().alpha -= 0.025f;
+            yield return new WaitForSeconds(0.025f);
+        }
+
+        if (incomingNewMessage)
+        {
+            StartCoroutine(AcceptNewMessage());
+            yield break;
         }
         else
         {
-            message = GetMessage(code, -1, additionalParams);
+            firstPass = false;
+            StartCoroutine(FadeInPanel());
         }
         
-        photonView.RPC("RPCSetText", RpcTarget.All, message);
+       
+    }
+   
+    private IEnumerator FadeInPanel()
+    {
+        
+        for (float f = 1f; f >= -0.025f; f -= 0.025f)
+        {
+            if (incomingNewMessage)
+            {
+                StartCoroutine(AcceptNewMessage());
+                yield break;
+            }
+
+            eventPanel.GetComponent<CanvasGroup>().alpha += 0.025f;
+            yield return new WaitForSeconds(0.025f);
+        }
+        
+        StartCoroutine(FadeOutPanel());
+    }
+
+    private IEnumerator AcceptNewMessage()
+    {
+        SetText(currentMessage = messageQueue.Dequeue());
+
+        if (messageQueue.Empty())
+        {
+            incomingNewMessage = false;
+        }
+
+        audioSource.Play();
+
+        StartCoroutine(FadeOutPanel());
+
+        yield break;
     }
     
     private void SetText(string message)
     {
-        photonView.RPC("RPCSetText", RpcTarget.All, message);
+        eventText.text = message;
     }
-
-    [PunRPC]
-    public void RPCSetText(string newText)
+    
+    private string GetMessage(EventCode code, int actorNumber, params object[] additionalParams)
     {
-        Debug.Log("Setting text - " + newText);
-        eventText.text = newText;
-    }
-
-    private string GetMessage(TextCode code, int actorNumber, params object[] additionalParams)
-    {
-        Player player = PhotonNetwork.CurrentRoom.GetPlayer(actorNumber);
-
         switch (code)
         {
-            case TextCode.FIRST_TURN_PHASE_ONE:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " is placing their first settlement.";
+            case EventCode.FIRST_TURN_PHASE_ONE:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + "</color>" + " is placing their first settlement.";
                 
-            case TextCode.FIRST_TURN_PHASE_TWO:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " is placing their first road.";
+            case EventCode.FIRST_TURN_PHASE_TWO:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their first road.";
                
-            case TextCode.SECOND_TURN_PHASE_ONE:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " is placing their second settlement.";
+            case EventCode.SECOND_TURN_PHASE_ONE:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their second settlement.";
                 
-            case TextCode.SECOND_TURN_PHASE_TWO:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " is placing their second road.";
-               
-            case TextCode.PRE_DICE_ROLL:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " is rolling the dice.";
+            case EventCode.SECOND_TURN_PHASE_TWO:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their second road.";
+            case EventCode.ROAD_CONSTRUCTED:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " constructed a road.";
+            case EventCode.SETTLEMENT_CONSTRUCTED:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " constructed a settlement.";
+            case EventCode.CITY_CONSTRUCTED:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " upgraded a settlement into a city.";
+            case EventCode.PRE_DICE_ROLL:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is rolling the dice.";
                 
-            case TextCode.DICE_ROLLED:
+            case EventCode.DICE_ROLLED:
                 int diceValue = (int)additionalParams[0];
                 string diceValueString = "";
                 if (diceValue == 7)
@@ -170,22 +206,25 @@ public class EventTextController : MonoBehaviour
                     diceValueString = "<color=red>";
                 }
 
-                diceValueString += diceValue + "</color>";
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " has rolled a " + diceValueString + ".";
+                diceValueString += diceValue;
+                if (diceValue >= 6 && diceValue <= 8) {
+                    diceValueString += "</color>";
+                }
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has rolled a " + diceValueString + ".";
 
-            case TextCode.RESOURCE_EARNED:
+            case EventCode.RESOURCE_EARNED:
 
                 int resourceType = (int)additionalParams[0];
                 int amount = (int)additionalParams[1];
 
                 Debug.Log("resourceType = " + resourceType + ", amount = " + amount);
 
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " has earned " + amount + "x" + "<color=" + resourceColours[resourceType] + ">" + resourceNames[resourceType] + "</color>.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has earned " + amount + "x" + ColourUtility.GetResourceText((Inventory.UnitCode)resourceType) + ".";
 
-            case TextCode.NO_RESOURCE_EARNED:
+            case EventCode.NO_RESOURCE_EARNED:
 
                 return "No player has earned any resources from this roll.";
-            case TextCode.SHOULD_DISCARD:
+            case EventCode.SHOULD_DISCARD:
                 
                 string resultText = "Waiting for ";
 
@@ -206,7 +245,7 @@ public class EventTextController : MonoBehaviour
                             resultText += ", ";
                         }
                         //discardlist[i] is null for some reason
-                        resultText += "<color=" + discardList[i].CustomProperties["colour"] + ">" + discardList[i].CustomProperties["username"] + "</color>";
+                        resultText += ColourUtility.GetPlayerDisplayName(discardList[i]);
                        
                     }
                     resultText += " to discard half of their resource cards.";
@@ -233,29 +272,29 @@ public class EventTextController : MonoBehaviour
                             {
                                 resultText += ", ";
                             }
-                            resultText += "<color=" + discardList[i].CustomProperties["colour"] + ">" + discardList[i].CustomProperties["username"] + "</color>";
+                            resultText += ColourUtility.GetPlayerDisplayName(discardList[i]); 
                         }
                     }
-                    resultText += " to discard half of their resource cards!";
+                    resultText += " to discard half of their resource cards.";
 
                 }
 
                 Debug.Log(resultText);
                 return resultText;
 
-            case TextCode.BANDIT_MOVE:
-                return "Waiting for " + "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color>" + " to move the bandit to another hex.";
-            case TextCode.STEAL_NO_ADJACENT_PLAYER:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> had nobody to steal from.";
-            case TextCode.NO_RESOURCE_STOLEN:
+            case EventCode.BANDIT_MOVE:
+                return "Waiting for " + ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " to move the bandit to another hex.";
+            case EventCode.STEAL_NO_ADJACENT_PLAYER:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " had nobody to steal from.";
+            case EventCode.NO_RESOURCE_STOLEN:
                 Player stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> had no cards to steal from " + "<color=" + stealPlayer.CustomProperties["colour"] + ">" + stealPlayer.CustomProperties["username"] + ".";
-            case TextCode.RESOURCE_STOLEN:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " had no cards to steal from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
+            case EventCode.RESOURCE_STOLEN:
                 stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
                 string resourceText = (string)additionalParams[1];
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> stole 1x" + resourceText + " from <color=" + stealPlayer.CustomProperties["colour"] + ">" + stealPlayer.CustomProperties["username"] + ".";
-            case TextCode.GAME_OVER:
-                return "<color=" + player.CustomProperties["colour"] + ">" + player.CustomProperties["username"] + "</color> has won the game! Press ESC to return to the main menu.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " stole 1x" + resourceText + " from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
+            case EventCode.GAME_OVER:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has won the game! Press ESC to return to the main menu.";
         }
         
 

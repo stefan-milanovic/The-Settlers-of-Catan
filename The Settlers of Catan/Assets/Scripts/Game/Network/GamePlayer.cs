@@ -430,7 +430,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                         }
                         if (waitingForDiscardCount != 0)
                         {
-                            eventTextController.SetText(EventTextController.TextCode.SHOULD_DISCARD, null, playerList);
+                            eventTextController.SendEvent(EventTextController.EventCode.SHOULD_DISCARD, null, playerList);
                         } else
                         {
                             // No one is discarding. Move bandit.
@@ -450,7 +450,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     senderId = moveMessage[2];
 
                     // Notify event text to update.
-                    eventTextController.SetText(EventTextController.TextCode.SHOULD_DISCARD, PhotonNetwork.CurrentRoom.GetPlayer(senderId));
+                    eventTextController.SendEvent(EventTextController.EventCode.SHOULD_DISCARD, PhotonNetwork.CurrentRoom.GetPlayer(senderId));
 
                     // Check if it was the last person who was being waited on to send the discard complete message.
 
@@ -584,13 +584,13 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         if (currentTurn == 1)
         {
             Debug.Log(PhotonNetwork.LocalPlayer.NickName);
-            eventTextController.SetText(EventTextController.TextCode.FIRST_TURN_PHASE_ONE, PhotonNetwork.LocalPlayer);
+            eventTextController.SendEvent(EventTextController.EventCode.FIRST_TURN_PHASE_ONE, PhotonNetwork.LocalPlayer);
 
         }
         else if (currentTurn == 2)
         {
             Debug.Log(PhotonNetwork.LocalPlayer.NickName);
-            eventTextController.SetText(EventTextController.TextCode.SECOND_TURN_PHASE_ONE, PhotonNetwork.LocalPlayer);
+            eventTextController.SendEvent(EventTextController.EventCode.SECOND_TURN_PHASE_ONE, PhotonNetwork.LocalPlayer);
 
         }
 
@@ -642,12 +642,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         if (currentTurn == 1)
         {
-            eventTextController.SetText(EventTextController.TextCode.FIRST_TURN_PHASE_TWO, PhotonNetwork.LocalPlayer);
+            eventTextController.SendEvent(EventTextController.EventCode.FIRST_TURN_PHASE_TWO, PhotonNetwork.LocalPlayer);
 
         }
         else if (currentTurn == 2)
         {
-            eventTextController.SetText(EventTextController.TextCode.SECOND_TURN_PHASE_TWO, PhotonNetwork.LocalPlayer);
+            eventTextController.SendEvent(EventTextController.EventCode.SECOND_TURN_PHASE_TWO, PhotonNetwork.LocalPlayer);
         }
 
         selectablePaths = new List<WorldPath>();
@@ -765,7 +765,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
         bottomPanel.EnableRolling();
 
-        eventTextController.SetText(EventTextController.TextCode.PRE_DICE_ROLL, PhotonNetwork.LocalPlayer);
+        eventTextController.SendEvent(EventTextController.EventCode.PRE_DICE_ROLL, PhotonNetwork.LocalPlayer);
     }
 
     protected void EnableEndingTurn()
@@ -792,7 +792,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         // inform everyone
         Debug.Log("Dice rolled - " + diceValue);
 
-        eventTextController.SetText(EventTextController.TextCode.DICE_ROLLED, PhotonNetwork.LocalPlayer, diceValue);
+        eventTextController.SendEvent(EventTextController.EventCode.DICE_ROLLED, PhotonNetwork.LocalPlayer, diceValue);
 
         if (diceValue != 7)
         {
@@ -892,7 +892,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     resourceIncomeMessage[3] = incomeByPlayer[i];
 
                     turnManager.SendMove(resourceIncomeMessage, false);
-                    eventTextController.AddToQueue(EventTextController.TextCode.RESOURCE_EARNED, PhotonNetwork.CurrentRoom.GetPlayer(i + 1), resourceIncomeMessage[2], resourceIncomeMessage[3]);
+                    eventTextController.SendEvent(EventTextController.EventCode.RESOURCE_EARNED, PhotonNetwork.CurrentRoom.GetPlayer(i + 1), resourceIncomeMessage[2], resourceIncomeMessage[3]);
                 }
             }
             
@@ -900,7 +900,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         if (!incomeAnnounced)
         {
-            eventTextController.SetText(EventTextController.TextCode.NO_RESOURCE_EARNED, PhotonNetwork.LocalPlayer);
+            eventTextController.SendEvent(EventTextController.EventCode.NO_RESOURCE_EARNED, PhotonNetwork.LocalPlayer);
         }
 
     }
@@ -914,7 +914,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     {
         Debug.Log("Moving bandit!");
 
-        eventTextController.SetText(EventTextController.TextCode.BANDIT_MOVE, PhotonNetwork.LocalPlayer);
+        eventTextController.SendEvent(EventTextController.EventCode.BANDIT_MOVE, PhotonNetwork.LocalPlayer);
 
         currentPhase = Phase.BANDIT_MOVE;
     }
@@ -944,7 +944,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         // If the player list is empty, just move on to the TRADE_BUILD phase.
         if (playerIdList.Count == 0)
         {
-            eventTextController.SetText(EventTextController.TextCode.STEAL_NO_ADJACENT_PLAYER, PhotonNetwork.LocalPlayer);
+            eventTextController.SendEvent(EventTextController.EventCode.STEAL_NO_ADJACENT_PLAYER, PhotonNetwork.LocalPlayer);
             currentPhase = Phase.TRADE_BUILD_IDLE;
         }
         else
@@ -957,7 +957,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     public void GameOver()
     {
         // Player won.
-        eventTextController.SetText(EventTextController.TextCode.GAME_OVER, PhotonNetwork.LocalPlayer);
+        eventTextController.SendEvent(EventTextController.EventCode.GAME_OVER, PhotonNetwork.LocalPlayer);
 
         // End the local player's turn.
         myTurn = false;

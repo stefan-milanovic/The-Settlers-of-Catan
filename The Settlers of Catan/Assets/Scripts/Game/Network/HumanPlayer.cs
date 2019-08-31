@@ -241,6 +241,10 @@ public class HumanPlayer : GamePlayer
                         {
                             // Pay resources
                             inventory.PaySettlementConstruction();
+
+                            // Inform event text controller.
+                            eventTextController.SendEvent(EventTextController.EventCode.SETTLEMENT_CONSTRUCTED, PhotonNetwork.LocalPlayer);
+
                             currentPhase = Phase.TRADE_BUILD_IDLE;
                         }
                     }
@@ -301,6 +305,10 @@ public class HumanPlayer : GamePlayer
 
                             inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
 
+                            // Inform event text.
+
+                            eventTextController.SendEvent(EventTextController.EventCode.ROAD_CONSTRUCTED, PhotonNetwork.LocalPlayer);
+
                             myPaths.Add(p);
                         }
                     }
@@ -337,6 +345,9 @@ public class HumanPlayer : GamePlayer
                         inventory.AddVictoryPoint(Inventory.UnitCode.CITY);
 
                         inventory.PayCityConstruction();
+
+                        eventTextController.SendEvent(EventTextController.EventCode.CITY_CONSTRUCTED, PhotonNetwork.LocalPlayer);
+
                         currentPhase = Phase.TRADE_BUILD_IDLE;
                     }
                 }

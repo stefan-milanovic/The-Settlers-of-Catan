@@ -61,19 +61,19 @@ public class HarbourPath : WorldPath
                 harbourText = "3:1";
                 break;
             case HarbourBonus.TWO_TO_ONE_BRICK:
-                harbourText = "2:1\n<color=red>Brick</color>";
+                harbourText = "2:1\n" + ColourUtility.GetResourceText(Inventory.UnitCode.BRICK);
                 break;
             case HarbourBonus.TWO_TO_ONE_GRAIN:
-                harbourText = "2:1\n<color=yellow>Grain</color>";
+                harbourText = "2:1\n" + ColourUtility.GetResourceText(Inventory.UnitCode.GRAIN);
                 break;
             case HarbourBonus.TWO_TO_ONE_LUMBER:
-                harbourText = "2:1\n<color=green>Lumber</color>";
+                harbourText = "2:1\n" + ColourUtility.GetResourceText(Inventory.UnitCode.LUMBER);
                 break;
             case HarbourBonus.TWO_TO_ONE_ORE:
-                harbourText = "2:1\n<color=blue>Ore</color>";
+                harbourText = "2:1\n" + ColourUtility.GetResourceText(Inventory.UnitCode.ORE);
                 break;
             case HarbourBonus.TWO_TO_ONE_WOOL:
-                harbourText = "2:1\n<color=orange>Wool</color>";
+                harbourText = "2:1\n" + ColourUtility.GetResourceText(Inventory.UnitCode.WOOL);
                 break;
         }
 

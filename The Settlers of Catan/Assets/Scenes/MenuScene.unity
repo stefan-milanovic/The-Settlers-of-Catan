@@ -4137,8 +4137,8 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_text: Start New Game
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ea74f4522393561439d34dd7af27310d, type: 2}
-  m_sharedMaterial: {fileID: 21577413365061016, guid: ea74f4522393561439d34dd7af27310d,
+  m_fontAsset: {fileID: 11400000, guid: a4392e7ae3664e747ae1359c9b5b4d8b, type: 2}
+  m_sharedMaterial: {fileID: 21906743717670090, guid: a4392e7ae3664e747ae1359c9b5b4d8b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -4560,6 +4560,7 @@ GameObject:
   m_Component:
   - component: {fileID: 769404381}
   - component: {fileID: 769404382}
+  - component: {fileID: 769404383}
   m_Layer: 0
   m_Name: ChatController
   m_TagString: Untagged
@@ -4595,6 +4596,103 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InputFieldChat: {fileID: 224183419}
   channelTextbox: {fileID: 1367370305}
+  chatMessageSoundSource: {fileID: 769404383}
+--- !u!82 &769404383
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 769404380}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 8300000, guid: 0480ad2bdf6fa494889481164565d8ea, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.4
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &844948714
 GameObject:
   m_ObjectHideFlags: 0
@@ -8285,7 +8383,7 @@ MonoBehaviour:
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
+  m_ChildControlHeight: 1
 --- !u!1 &1360535962
 GameObject:
   m_ObjectHideFlags: 0
@@ -8414,7 +8512,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 226.87, y: -297.73376}
+  m_AnchoredPosition: {x: 226.87, y: -412.74445}
   m_SizeDelta: {x: 433.74, y: 18.96}
   m_Pivot: {x: 0.5, y: 0.02}
 --- !u!114 &1367370304
@@ -8775,8 +8873,8 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_text: About
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ea74f4522393561439d34dd7af27310d, type: 2}
-  m_sharedMaterial: {fileID: 21577413365061016, guid: ea74f4522393561439d34dd7af27310d,
+  m_fontAsset: {fileID: 11400000, guid: a4392e7ae3664e747ae1359c9b5b4d8b, type: 2}
+  m_sharedMaterial: {fileID: 21906743717670090, guid: a4392e7ae3664e747ae1359c9b5b4d8b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -9412,8 +9510,8 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_text: Exit
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ea74f4522393561439d34dd7af27310d, type: 2}
-  m_sharedMaterial: {fileID: 21577413365061016, guid: ea74f4522393561439d34dd7af27310d,
+  m_fontAsset: {fileID: 11400000, guid: a4392e7ae3664e747ae1359c9b5b4d8b, type: 2}
+  m_sharedMaterial: {fileID: 21906743717670090, guid: a4392e7ae3664e747ae1359c9b5b4d8b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -10069,7 +10167,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000030517578}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1675251495
@@ -10530,8 +10628,8 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_text: Tutorial
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ea74f4522393561439d34dd7af27310d, type: 2}
-  m_sharedMaterial: {fileID: 21577413365061016, guid: ea74f4522393561439d34dd7af27310d,
+  m_fontAsset: {fileID: 11400000, guid: a4392e7ae3664e747ae1359c9b5b4d8b, type: 2}
+  m_sharedMaterial: {fileID: 21906743717670090, guid: a4392e7ae3664e747ae1359c9b5b4d8b,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -17623,7 +17721,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2077278949
 RectTransform:
   m_ObjectHideFlags: 0

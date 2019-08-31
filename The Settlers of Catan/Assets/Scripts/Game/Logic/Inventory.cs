@@ -273,29 +273,16 @@ public class Inventory : MonoBehaviour
 
         if (receivedResourceId == -1)
         {
-            GameObject.Find("EventTextController").GetComponent<EventTextController>().SetText(EventTextController.TextCode.NO_RESOURCE_STOLEN, PhotonNetwork.LocalPlayer, senderId);
+            GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.NO_RESOURCE_STOLEN, PhotonNetwork.LocalPlayer, senderId);
         }
         else
         {
             UnitCode receivedResource = (UnitCode)receivedResourceId;
             this.GiveToPlayer(receivedResource, 1);
-            GameObject.Find("EventTextController").GetComponent<EventTextController>().SetText(EventTextController.TextCode.RESOURCE_STOLEN, PhotonNetwork.LocalPlayer, senderId, GetResourceCardText(receivedResource));
+            GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.RESOURCE_STOLEN, PhotonNetwork.LocalPlayer, senderId, ColourUtility.GetResourceText(receivedResource));
         }
         
     }
 
-    private string GetResourceCardText(UnitCode resourceCode)
-    {
-        switch (resourceCode)
-        {
-            case UnitCode.BRICK: return "<color=red>Brick</color>";
-            case UnitCode.GRAIN: return "<color=yellow>Grain</color>";
-            case UnitCode.LUMBER: return "<color=green>Lumber</color>";
-            case UnitCode.ORE: return "<color=blue>Ore</color>";
-            case UnitCode.WOOL: return "<color=orange>Wool</color>";
-        }
-
-        return "<invalid_resource_code>";
-    }
 
 }

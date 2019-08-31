@@ -52,5 +52,8 @@ MonoBehaviour:
   - RPCOccupyByBandit
   - RPCRemoveBandit
   - RPCSetHarbourBonus
+  - RPCGameOver
+  - RPCGameOver
+  - RPCEventReceived
   DisableAutoOpenWizard: 1
   ShowSettings: 1

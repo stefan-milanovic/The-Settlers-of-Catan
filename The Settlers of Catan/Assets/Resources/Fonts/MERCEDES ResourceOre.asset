@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: MERCEDES ResourceOre
   m_EditorClassIdentifier: 
-  hashCode: -1986105049
+  hashCode: 1242438108
   material: {fileID: 21577413365061016}
   materialHashCode: 1895397711
   fontAssetType: 1
@@ -1067,7 +1067,7 @@ Material:
     - _ClipRect: {r: -32767, g: -32767, b: 32767, a: 32767}
     - _EnvMatrixRotation: {r: 0, g: 0, b: 0, a: 0}
     - _FaceColor: {r: 1, g: 1, b: 1, a: 1}
-    - _GlowColor: {r: 0.12148449, g: 0.45801526, b: 0.735849, a: 0.92941177}
+    - _GlowColor: {r: 0.121484466, g: 0.45801526, b: 0.735849, a: 0.92941177}
     - _MaskCoord: {r: 0, g: 0, b: 32767, a: 32767}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _ReflectFaceColor: {r: 0, g: 0, b: 0, a: 1}

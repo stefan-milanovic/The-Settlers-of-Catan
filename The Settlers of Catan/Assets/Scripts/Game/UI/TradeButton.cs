@@ -45,7 +45,7 @@ public class TradeButton : MonoBehaviour
 
     private string GetPlayerToTradeWithDisplayName()
     {
-        return "<color=" + playerToTradeWith.CustomProperties["colour"] + ">" + playerToTradeWith.CustomProperties["username"] + "</color>";
+        return ColourUtility.GetPlayerDisplayName(playerToTradeWith);
     }
 
     public void SetPlayer(Player p)

@@ -115,10 +115,6 @@ public class TradeController : MonoBehaviour
 
     public bool IsTrading() { return trading; }
 
-    private string PlayerNameFromId(int playerId)
-    {
-        return "<color=" + PhotonNetwork.CurrentRoom.GetPlayer(playerId).CustomProperties["colour"] + ">" + PhotonNetwork.CurrentRoom.GetPlayer(playerId).CustomProperties["username"] + "</color>";
-    }
 
     #region Sender Methods (This player is the trade request sender)
 
@@ -156,7 +152,7 @@ public class TradeController : MonoBehaviour
     {
         recepientResponded = false;
         TextMeshProUGUI panelText = tradeRequestStatusPanel.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
-        string recepientName = PlayerNameFromId(recepientId);
+        string recepientName = ColourUtility.GetPlayerDisplayNameFromId(recepientId);
 
         for (int i = 10; i > 0; i--)
         {
@@ -173,7 +169,7 @@ public class TradeController : MonoBehaviour
 
             if (tradeDeclined)
             {
-                panelText.text = PlayerNameFromId(recepientId) + " has declined your trade request.";
+                panelText.text = ColourUtility.GetPlayerDisplayNameFromId(recepientId) + " has declined your trade request.";
                 yield return new WaitForSeconds(3);
                 tradeRequestStatusPanel.SetActive(false);
                 yield break;
@@ -269,7 +265,7 @@ public class TradeController : MonoBehaviour
                 break;
             }
 
-            popupText.text = PlayerNameFromId(senderId) + " sent you a trade request (" + i + ").";
+            popupText.text = ColourUtility.GetPlayerDisplayNameFromId(senderId) + " sent you a trade request (" + i + ").";
             yield return new WaitForSeconds(1);
         }
 
@@ -327,7 +323,7 @@ public class TradeController : MonoBehaviour
         this.recepientId = SUPPLY_ID;
 
         // Set up player and supply name.
-        localPlayerText.text = PlayerNameFromId(senderId) + "'s offer";
+        localPlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(senderId) + "'s offer";
         remotePlayerText.text = "Available cards: 0";
 
         // Set up cards. Left ones are local, right ones are remote.
@@ -472,13 +468,13 @@ public class TradeController : MonoBehaviour
 
         if (amRecepient)
         {
-            localPlayerText.text = PlayerNameFromId(recepientId) + "'s offer";
-            remotePlayerText.text = PlayerNameFromId(senderId) + "'s offer";
+            localPlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(recepientId) + "'s offer";
+            remotePlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(senderId) + "'s offer";
         }
         else
         {
-            localPlayerText.text = PlayerNameFromId(senderId) + "'s offer";
-            remotePlayerText.text = PlayerNameFromId(recepientId) + "'s offer";
+            localPlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(senderId) + "'s offer";
+            remotePlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(recepientId) + "'s offer";
         }
 
         // Set up cards. Left ones are local, right ones are remote.

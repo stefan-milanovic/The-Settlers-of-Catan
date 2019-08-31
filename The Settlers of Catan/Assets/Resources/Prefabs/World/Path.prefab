@@ -328,6 +328,7 @@ GameObject:
   - component: {fileID: 6816078734800999367}
   - component: {fileID: 3731359214709657224}
   - component: {fileID: 3221214434469314067}
+  - component: {fileID: 172128739941883190}
   m_Layer: 0
   m_Name: Path
   m_TagString: Path
@@ -406,7 +407,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 6816078734800999361}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
@@ -448,6 +449,19 @@ MonoBehaviour:
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
+--- !u!65 &172128739941883190
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6816078734800999361}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 2, y: 2.1, z: 1.0000008}
+  m_Center: {x: 0.00000005960465, y: 5.2740242e-17, z: -0.000000089406996}
 --- !u!1001 &4755665276492866309
 PrefabInstance:
   m_ObjectHideFlags: 0
