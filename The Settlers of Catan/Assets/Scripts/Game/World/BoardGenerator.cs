@@ -171,6 +171,10 @@ public class BoardGenerator : MonoBehaviour
 
             harbourPoolSize--;
         }
+
+        // Shuffle the development deck.
+
+        GameObject.Find("DevelopmentCardDeck").GetComponent<DevelopmentCardDeck>().Init();
         
     }
 

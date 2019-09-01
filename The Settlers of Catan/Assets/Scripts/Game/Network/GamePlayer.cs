@@ -23,7 +23,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         BUILDING,
         STOP_BUILDING,
         BANDIT_MOVE,
-        TRADING
+        TRADING,
+        STEAL
     }
 
     public enum MessageCode
@@ -416,18 +417,18 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     {
                         
                         waitingForDiscardCount = 0;
-                        List<Player> playerList = new List<Player>();
+                        List<int> playerList = new List<int>();
                         for (int i = 0; i < 4; i++)
                         {
                             if (haveToDiscard[i])
                             {
-                                playerList.Add(PhotonNetwork.CurrentRoom.GetPlayer(i));
+                                playerList.Add(PhotonNetwork.CurrentRoom.GetPlayer(i).ActorNumber);
                                 waitingForDiscardCount++;
                             }
                         }
                         if (waitingForDiscardCount != 0)
                         {
-                            eventTextController.SendEvent(EventTextController.EventCode.SHOULD_DISCARD, null, playerList);
+                            eventTextController.SendEvent(EventTextController.EventCode.SHOULD_DISCARD, null, playerList.ToArray());
                         } else
                         {
                             // No one is discarding. Move bandit.
@@ -446,17 +447,19 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     // Find out who sent the message.
                     senderId = moveMessage[2];
 
-                    // Notify event text to update.
-                    eventTextController.SendEvent(EventTextController.EventCode.SHOULD_DISCARD, PhotonNetwork.CurrentRoom.GetPlayer(senderId));
-
+                    
                     // Check if it was the last person who was being waited on to send the discard complete message.
-
                     waitingForDiscardCount--;
 
                     if (waitingForDiscardCount == 0)
                     {
                         // Last person to discard. Continue on to the moving the bandit phase.
                         MoveBandit();
+                    }
+                    else
+                    {
+                        // Notify event text to update.
+                        eventTextController.SendEvent(EventTextController.EventCode.SHOULD_DISCARD, PhotonNetwork.CurrentRoom.GetPlayer(senderId));
                     }
                 }
                 break;
@@ -476,6 +479,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             case MessageCode.STEAL_RESOURCE_REPLY:
 
                 recepientId = moveMessage[1];
+                Debug.Log("steal reply received");
                 if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
                 {
                     // Check which resource the player sent you.
@@ -810,6 +814,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         {
             // Notify players that a 7 has been rolled.
 
+            DisableRollDiceButton();
+            DisableEndingTurn();
+
             int[] sevenRolledMessage = new int[2];
             sevenRolledMessage[0] = (int)MessageCode.SEVEN_ROLLED_ANNOUNCEMENT;
             sevenRolledMessage[1] = PhotonNetwork.LocalPlayer.ActorNumber;
@@ -923,6 +930,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     {
         // Find all the players that have a settlement or a city on this hex (and they are not this player).
 
+        currentPhase = Phase.STEAL;
+
         Intersection[] hexIntersections = banditHex.GetIntersections();
         List<int> playerIdList = new List<int>();
 
@@ -950,9 +959,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
             currentPhase = Phase.TRADE_BUILD_IDLE;
+            EnableEndingTurn();
         }
         else
         {
+
+            eventTextController.SendEvent(EventTextController.EventCode.SELECTING_STEAL_VICTIM, PhotonNetwork.LocalPlayer);
             // Notify the discard controller to open the steal panel and allow the player to select someone to steal from.
             GameObject.Find("DiscardController").GetComponent<DiscardController>().PrepareStealing(playerIdList);
         }
@@ -971,11 +983,5 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         int[] gameOverMessage = new int[1];
         gameOverMessage[0] = (int)MessageCode.GAME_OVER;
         turnManager.SendMove(gameOverMessage, false);
-    }
-
-    [PunRPC]
-    public void RPCGameOver()
-    {
-        this.gameOver = true;
     }
 }

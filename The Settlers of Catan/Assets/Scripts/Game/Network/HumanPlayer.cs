@@ -127,6 +127,8 @@ public class HumanPlayer : GamePlayer
         else
         {
 
+            if (gameOver) { return; }
+
             // It is my turn to play.
 
             if (setUpPhase)
@@ -376,6 +378,7 @@ public class HumanPlayer : GamePlayer
 
                     if (!hex.OccupiedByBandit())
                     {
+
                         // Remove the bandit from the previous hex.
                         Hex banditHex = Hex.GetBanditHex();
                         banditHex.RemoveBandit();

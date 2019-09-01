@@ -64,6 +64,10 @@ public class OverviewController : MonoBehaviour
         {
             cardWarningText.text = "<color=red>If any player rolls a <color=black>7</color> you will have to discard <color=orange>" + amount / 2 + "</color> Resource cards.</color>";
         }
+        else
+        {
+            cardWarningText.text = "";
+        }
     }
         
 }

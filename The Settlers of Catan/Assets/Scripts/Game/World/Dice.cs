@@ -56,7 +56,6 @@ public class Dice : MonoBehaviour
 
         if (justGotOwnership)
         {
-            Debug.Log("jgo");
             justGotOwnership = false;
             rigidBody.constraints = RigidbodyConstraints.FreezeAll;
         }
@@ -109,7 +108,11 @@ public class Dice : MonoBehaviour
 
     private void RollAgain()
     {
+        Debug.Log("roll again called");
+
         Reset();
+
+        transform.localPosition += throwPosition;
         thrown = true;
         rigidBody.useGravity = true;
         rigidBody.AddTorque(Random.Range(0, 500), Random.Range(0, 500), Random.Range(0, 500));

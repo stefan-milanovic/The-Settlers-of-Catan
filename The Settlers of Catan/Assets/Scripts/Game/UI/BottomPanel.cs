@@ -32,6 +32,9 @@ public class BottomPanel : MonoBehaviour
     [SerializeField]
     private GameObject tradePanel;
 
+    [SerializeField]
+    private GameObject developmentBuyPanel;
+
 
     // Start is called before the first frame update
     void Start()
@@ -97,6 +100,17 @@ public class BottomPanel : MonoBehaviour
 
         if (panelToOpen != PanelCode.TRADE)
         {
+
+            // Toggle the display of the buy button if the Development tab is being opened.
+            if (panelToOpen == PanelCode.DEVELOPMENT || currentOpenPanel == PanelCode.DEVELOPMENT)
+            {
+                GamePlayer localPlayer = GamePlayer.FindLocalPlayer();
+                if (localPlayer.IsMyTurn())
+                {
+                    ToggleDevelopmentBuyPanelVisibility();
+                }
+            }
+
             DisplayPanel(oldPanelName, false);
             ToggleButton(oldButtonTag, true);
 
@@ -155,6 +169,7 @@ public class BottomPanel : MonoBehaviour
 
         // Only toggles if it's a button from the main menu panel at the bottom of the screen.
         
+
         Button button = GameObject.FindGameObjectWithTag(buttonTag).GetComponent<Button>();
         
         ColorBlock colourBlock = button.colors;
@@ -173,6 +188,17 @@ public class BottomPanel : MonoBehaviour
 
     }
 
+    private void ToggleDevelopmentBuyPanelVisibility()
+    {
+        if (developmentBuyPanel.activeSelf)
+        {
+            developmentBuyPanel.SetActive(false);
+        }
+        else
+        {
+            developmentBuyPanel.SetActive(true);
+        }
+    }
 
     #region Bottom Right Buttons
 

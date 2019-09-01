@@ -32,7 +32,6 @@ public class SceneController : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.CurrentRoom.CustomProperties["leaderboardSlot1"] == null)
         {
-            Debug.Log("setting properties ldbrd");
             PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
             {
                 ["leaderboardSlot1"] = 0,

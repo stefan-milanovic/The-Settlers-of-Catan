@@ -42,16 +42,18 @@ public class EventTextController : MonoBehaviour
         TRADE_PLAYERS_COMPLETED,
         SHOULD_DISCARD,
         BANDIT_MOVE,
+        SELECTING_STEAL_VICTIM,
         STEAL_NO_ADJACENT_PLAYER,
         NO_RESOURCE_STOLEN,
         RESOURCE_STOLEN,
+        DEVELOPMENT_CARD_PURCHASED,
         END_TURN,
-        GAME_OVER
+        GAME_OVER,
     };
     
     private bool busy = false;
 
-    private List<Player> discardList;
+    private List<int> discardList;
 
 
     private Queue<string> messageQueue = new Queue<string>();
@@ -267,7 +269,7 @@ public class EventTextController : MonoBehaviour
                 if (actorNumber == -1)
                 {
                     // Initial set.
-                    discardList = (List<Player>)additionalParams[0];
+                    discardList = ((int[])additionalParams[0]).OfType<int>().ToList();
 
                     bool first = true;
                     for (int i = 0; i < discardList.Count; i++)
@@ -281,7 +283,7 @@ public class EventTextController : MonoBehaviour
                             resultText += ", ";
                         }
                         //discardlist[i] is null for some reason
-                        resultText += ColourUtility.GetPlayerDisplayName(discardList[i]);
+                        resultText += ColourUtility.GetPlayerDisplayNameFromId(discardList[i]);
                        
                     }
                     resultText += " to discard half of their resource cards.";
@@ -289,27 +291,24 @@ public class EventTextController : MonoBehaviour
                 else
                 {
                     // Update. Remove the player from the discard list and then repeat.
-                    Player foundPlayer = discardList.Find(p => p.ActorNumber == actorNumber);
-                    if (foundPlayer != null)
+                    if (discardList.IndexOf(actorNumber) != -1)
                     {
-                        discardList.Remove(foundPlayer);
+                        discardList.Remove(actorNumber);
                     }
 
                     bool first = true;
                     for (int i = 0; i < discardList.Count; i++)
                     {
-                        if (discardList[i] != null)
+                        if (first)
                         {
-                            if (first)
-                            {
-                                first = false;
-                            }
-                            else
-                            {
-                                resultText += ", ";
-                            }
-                            resultText += ColourUtility.GetPlayerDisplayName(discardList[i]); 
+                            first = false;
                         }
+                        else
+                        {
+                            resultText += ", ";
+                        }
+                        resultText += ColourUtility.GetPlayerDisplayNameFromId(discardList[i]); 
+                        
                     }
                     resultText += " to discard half of their resource cards.";
 
@@ -320,6 +319,8 @@ public class EventTextController : MonoBehaviour
 
             case EventCode.BANDIT_MOVE:
                 return "Waiting for " + ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " to move the bandit to another hex.";
+            case EventCode.SELECTING_STEAL_VICTIM:
+                return "Waiting for " + ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " to select a player to steal from.";
             case EventCode.STEAL_NO_ADJACENT_PLAYER:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " had nobody to steal from.";
             case EventCode.NO_RESOURCE_STOLEN:
@@ -329,6 +330,8 @@ public class EventTextController : MonoBehaviour
                 stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
                 string resourceText = (string)additionalParams[1];
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " stole 1x" + resourceText + " from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
+            case EventCode.DEVELOPMENT_CARD_PURCHASED:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " purchased a development card from the supply.";
             case EventCode.GAME_OVER:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has won the game! Press ESC to return to the main menu.";
             case EventCode.END_TURN:

@@ -60,6 +60,8 @@ public class Inventory : MonoBehaviour
 
         this.overviewController = GameObject.Find("OverviewController").GetComponent<OverviewController>();
 
+        GameObject.Find("ShopController").GetComponent<ShopController>().SetInventory(this);
+
         // Connect to inventory cards (do not initialise trade cards).
         Card[] cardList = FindObjectsOfType<Card>();
         foreach (Card card in cardList)
@@ -83,6 +85,11 @@ public class Inventory : MonoBehaviour
     public void SetPlayer(GamePlayer p)
     {
         myPlayer = p;
+    }
+
+    public bool CanBuyDevelopmentCard()
+    {
+        return (stock[(int)UnitCode.GRAIN] > 0 && stock[(int)UnitCode.ORE] > 0 && stock[(int)UnitCode.WOOL] > 0);
     }
 
     public GamePlayer GetPlayer() { return myPlayer; }
