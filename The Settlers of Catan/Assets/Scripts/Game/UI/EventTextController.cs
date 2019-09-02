@@ -47,11 +47,10 @@ public class EventTextController : MonoBehaviour
         NO_RESOURCE_STOLEN,
         RESOURCE_STOLEN,
         DEVELOPMENT_CARD_PURCHASED,
+        DEVELOPMENT_CARD_PLAYED,
         END_TURN,
         GAME_OVER,
     };
-    
-    private bool busy = false;
 
     private List<int> discardList;
 
@@ -332,6 +331,9 @@ public class EventTextController : MonoBehaviour
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " stole 1x" + resourceText + " from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
             case EventCode.DEVELOPMENT_CARD_PURCHASED:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " purchased a development card from the supply.";
+            case EventCode.DEVELOPMENT_CARD_PLAYED:
+                Inventory.UnitCode cardCode = (Inventory.UnitCode)additionalParams[0];
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " played a " + ColourUtility.GetDevelopmentText(cardCode) + " card!";
             case EventCode.GAME_OVER:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has won the game! Press ESC to return to the main menu.";
             case EventCode.END_TURN:

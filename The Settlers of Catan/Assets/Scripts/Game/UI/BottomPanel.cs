@@ -17,9 +17,7 @@ public class BottomPanel : MonoBehaviour
     };
 
     PanelCode currentOpenPanel = PanelCode.RESOURCES;
-
-    private bool tradePanelOpen = false;
-
+    
     [SerializeField]
     private Button rollDiceButton;
 
@@ -48,7 +46,7 @@ public class BottomPanel : MonoBehaviour
         
     }
 
-    public bool TradePanelOpen() { return tradePanelOpen; }
+    public bool TradePanelOpen() { return tradePanel.activeSelf; }
     public void OpenResourcesTab()
     {
         TogglePanel(PanelCode.RESOURCES);
@@ -75,7 +73,9 @@ public class BottomPanel : MonoBehaviour
 
         GamePlayer localPlayer = GamePlayer.FindLocalPlayer();
 
-        if (!localPlayer.IsMyTurn() || localPlayer.GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE || GameObject.Find("TradeController").GetComponent<TradeController>().IsTrading() || GameObject.Find("TradeController").GetComponent<TradeController>().IsSupplyTrading())
+        if (!localPlayer.IsMyTurn() || localPlayer.GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE ||
+            GameObject.Find("TradeController").GetComponent<TradeController>().IsTrading() ||
+            GameObject.Find("TradeController").GetComponent<TradeController>().IsSupplyTrading())
         {
             return;
         }
@@ -126,20 +126,17 @@ public class BottomPanel : MonoBehaviour
         }
         else
         {
-            if (!tradePanelOpen)
+            if (!tradePanel.activeSelf)
             {
-                tradePanel.SetActive(tradePanelOpen = true);
+                tradePanel.SetActive(true);
             }
             else
             {
-                tradePanel.SetActive(tradePanelOpen = false);
+                tradePanel.SetActive(false);
             }
         }
 
         
-
-        
-      
     }
 
     private string FindPrefix(PanelCode? panelToOpen)

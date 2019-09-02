@@ -202,7 +202,10 @@ public class Intersection : MonoBehaviour
 
     private void ShowShortFlag()
     {
-        string materialPath = "Materials/PlayerMaterials/Player" + ownerId + "Material";
+
+        int position = GamePlayer.FindPosition(ownerId) + 1;
+
+        string materialPath = "Materials/PlayerMaterials/Player" + position + "Material";
 
         ColorUtility.TryParseHtmlString(PhotonNetwork.CurrentRoom.GetPlayer(ownerId).CustomProperties["colour"] as string, out Color playerColour);
 
@@ -213,7 +216,7 @@ public class Intersection : MonoBehaviour
         shortFlagObject.SetActive(true);
 
         // Set roof colour.
-        string roofPath = "Materials/PlayerMaterials/RoofP" + ownerId;
+        string roofPath = "Materials/PlayerMaterials/RoofP" + position;
 
         settlementRoof.GetComponent<MeshRenderer>().material = Resources.Load(roofPath) as Material;
         settlementRoof.GetComponent<MeshRenderer>().material.SetColor("_Color", playerColour);
@@ -226,7 +229,10 @@ public class Intersection : MonoBehaviour
 
     private void ShowLongFlag()
     {
-        string materialPath = "Materials/PlayerMaterials/Player" + ownerId + "Material";
+
+        int position = GamePlayer.FindPosition(ownerId) + 1;
+
+        string materialPath = "Materials/PlayerMaterials/Player" + position + "Material";
         ColorUtility.TryParseHtmlString(PhotonNetwork.LocalPlayer.CustomProperties["colour"] as string, out Color playerColour);
 
         longFlag.GetComponent<SkinnedMeshRenderer>().material = Resources.Load(materialPath) as Material;
@@ -235,7 +241,7 @@ public class Intersection : MonoBehaviour
         longFlagObject.SetActive(true);
 
         // Set roof colour.
-        string roofPath = "Materials/PlayerMaterials/RoofCityP" + ownerId;
+        string roofPath = "Materials/PlayerMaterials/RoofCityP" + position;
 
         cityRoof1.GetComponent<MeshRenderer>().material = Resources.Load(roofPath) as Material;
         cityRoof1.GetComponent<MeshRenderer>().material.SetColor("_Color", playerColour);

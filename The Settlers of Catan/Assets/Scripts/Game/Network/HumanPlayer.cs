@@ -59,9 +59,7 @@ public class HumanPlayer : GamePlayer
                 ["username"] = this.username,
                 ["colour"] = this.colourHex
             });
-
-            // Claim an empty leadeboard slot.
-
+            
             // Connect to Turn Manager - ONLY LOCAL PLAYER CALLS THIS.
             ConnectToTurnManager();
             
@@ -190,6 +188,12 @@ public class HumanPlayer : GamePlayer
             {
                 SelectBanditHex();
             }
+
+            if (currentPhase == Phase.PLAYED_EXPANSION_CARD)
+            {
+                FindSelectablePaths();
+                SelectRoadLocation();
+            }
         }
         
     }
@@ -300,22 +304,47 @@ public class HumanPlayer : GamePlayer
                         }
                         else
                         {
-                            // Pay resources
-                            inventory.PayRoadConstruction();
+
+                            if (currentPhase == Phase.PLAYED_EXPANSION_CARD)
+                            {
+                                // Free road placement.
+                                
+                                p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
+
+                                inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+
+                                myPaths.Add(p);
+
+                                freeRoadsPlaced++;
+                                // If second one is placed, put up event text.
+
+                                if (freeRoadsPlaced == 2)
+                                {
+                                    eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
+                                    currentPhase = Phase.TRADE_BUILD_IDLE;
+                                }
+                                
+                            }
+                            else
+                            {
+                                // Pay resources
+                                inventory.PayRoadConstruction();
+
+
+                                p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
+
+                                inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+
+                                // Inform event text.
+
+                                eventTextController.SendEvent(EventTextController.EventCode.ROAD_CONSTRUCTED, PhotonNetwork.LocalPlayer);
+
+                                eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
+                                currentPhase = Phase.TRADE_BUILD_IDLE;
+
+                                myPaths.Add(p);
+                            }
                             
-
-                            p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
-
-                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
-
-                            // Inform event text.
-
-                            eventTextController.SendEvent(EventTextController.EventCode.ROAD_CONSTRUCTED, PhotonNetwork.LocalPlayer);
-
-                            eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
-                            currentPhase = Phase.TRADE_BUILD_IDLE;
-
-                            myPaths.Add(p);
                         }
                     }
                     

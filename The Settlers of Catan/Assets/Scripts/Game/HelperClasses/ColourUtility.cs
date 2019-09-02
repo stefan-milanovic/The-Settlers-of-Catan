@@ -45,7 +45,15 @@ public class ColourUtility
         "Wool"
     };
 
-    
+    private static string[] developmentCardNames = {
+        "Knight",
+        "Expansion",
+        "Year of Plenty",
+        "Monopoly",
+        "Victory Card"
+    };
+
+
     public static string GetResourceText(Inventory.UnitCode resourceCode) {
         
         if (resourceCode > Inventory.UnitCode.WOOL)
@@ -64,5 +72,10 @@ public class ColourUtility
     public static string GetPlayerDisplayNameFromId(int playerId)
     {
         return "<color=" + PhotonNetwork.CurrentRoom.GetPlayer(playerId).CustomProperties["colour"] + ">" + PhotonNetwork.CurrentRoom.GetPlayer(playerId).CustomProperties["username"] + "</color>";
+    }
+
+    public static string GetDevelopmentText(Inventory.UnitCode cardCode)
+    {
+        return "<color=" + "black" + ">" + developmentCardNames[(int)cardCode - 5] + "</color>";
     }
 }

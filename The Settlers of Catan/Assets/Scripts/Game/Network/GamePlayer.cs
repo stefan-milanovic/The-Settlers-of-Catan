@@ -24,7 +24,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         STOP_BUILDING,
         BANDIT_MOVE,
         TRADING,
-        STEAL
+        STEAL,
+        PLAYED_EXPANSION_CARD
     }
 
     public enum MessageCode
@@ -63,6 +64,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     protected int currentTurn;
 
+    public int CurrentTurn {
+        get { return currentTurn; }
+    }
+
     protected List<Intersection> selectableIntersections = new List<Intersection>();
     protected List<Intersection> selectableSettlements = new List<Intersection>();
     protected List<WorldPath> selectablePaths = new List<WorldPath>();
@@ -94,6 +99,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     protected bool[] haveToDiscard;
     protected int waitingForDiscardCount;
 
+    protected int freeRoadsPlaced = 0;
+
     // UI
 
     protected Button rollDiceButton;
@@ -111,7 +118,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         audioSource = GameObject.Find("AudioSources").GetComponent<AudioSource>();
         rollDiceButton = GameObject.Find("RollDiceButton").GetComponent<Button>();
     }
-
+    
     public static GamePlayer FindLocalPlayer()
     {
         GamePlayer[] playerList = FindObjectsOfType<HumanPlayer>();
@@ -532,14 +539,22 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             }
         }
 
-        if (currentTurn != 2)
+        if (PhotonNetwork.CurrentRoom.PlayerCount > 1)
         {
-            nextPlayer = PhotonNetwork.PlayerList[prevPlayerPosition + 1];
+            if (currentTurn != 2)
+            {
+                nextPlayer = PhotonNetwork.PlayerList[prevPlayerPosition + 1];
+            }
+            else
+            {
+                // LIFO setup.
+                nextPlayer = PhotonNetwork.PlayerList[prevPlayerPosition - 1];
+            }
+
         }
         else
         {
-            // LIFO setup.
-            nextPlayer = PhotonNetwork.PlayerList[prevPlayerPosition - 1];
+            nextPlayer = null;
         }
 
         if (nextPlayer == null)
@@ -550,6 +565,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         this.currentPlayer = nextPlayer;
         if (PhotonNetwork.LocalPlayer == nextPlayer)
         {
+            currentTurn = turn;
+
             if (turn == 1)
             {
                 // Init trade.
@@ -728,8 +745,16 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             }
         }
 
-
-
+        // If the player is placing free roads (Expansion Development card), adjust counters.
+        if (currentPhase == Phase.PLAYED_EXPANSION_CARD)
+        {
+            // Reset if required.
+            if (freeRoadsPlaced == 2)
+            {
+                freeRoadsPlaced = 0;
+            }
+            
+        }
 
     }
 
@@ -937,7 +962,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         return inventory.GetResourceCardCount() >= 8;
     }
 
-    private void MoveBandit()
+    public void MoveBandit()
     {
         Debug.Log("Moving bandit!");
 

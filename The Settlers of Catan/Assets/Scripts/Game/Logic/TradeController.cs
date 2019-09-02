@@ -59,7 +59,10 @@ public class TradeController : MonoBehaviour
     private int recepientId;
 
     private bool supplyTrading;
+    private bool yearOfPlenty;
+
     private const int SUPPLY_ID = -1;
+
     [SerializeField]
     private GameObject clearRemoteButton;
 
@@ -126,6 +129,7 @@ public class TradeController : MonoBehaviour
 
         this.amRecepient = false;
         this.supplyTrading = false;
+        
 
         int[] tradeRequestMessage = new int[2];
         tradeRequestMessage[0] = (int)GamePlayer.MessageCode.TRADE_REQUEST;
@@ -314,9 +318,10 @@ public class TradeController : MonoBehaviour
         }
         LockRemotePanel();
 
-        trading = true;
+        
         clearRemoteButton.SetActive(true);
 
+        trading = true;
         supplyTrading = true;
         this.AvailableCards = 0;
 
@@ -432,6 +437,16 @@ public class TradeController : MonoBehaviour
 
     #endregion
 
+
+    #region Year Of Plenty
+
+    public void YearOfPlentyInit()
+    {
+
+    }
+
+    #endregion
+
     #region Mutual methods
 
     public void DeclineTradeOffer()
@@ -465,6 +480,7 @@ public class TradeController : MonoBehaviour
         UnlockRemotePanel();
 
         trading = true;
+        supplyTrading = false;
         clearRemoteButton.SetActive(false);
 
         // Set up player names.
@@ -729,6 +745,7 @@ public class TradeController : MonoBehaviour
     {
 
         trading = false;
+        supplyTrading = false;
 
         // Return resources from the local cards to the stock.
 
@@ -841,6 +858,10 @@ public class TradeController : MonoBehaviour
 
     private void PerformResourceExchange()
     {
+
+        trading = false;
+        supplyTrading = false;
+
         foreach(Card remoteCard in remoteCards)
         {
             inventory.GiveToPlayer(remoteCard.GetUnitCode(), remoteCard.getAmount());

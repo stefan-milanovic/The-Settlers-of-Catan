@@ -46,6 +46,8 @@ public class Inventory : MonoBehaviour
     private int playerScore = 0;
     private int hiddenPlayerScore = 0;
 
+    private int knightCardsPlayed = 0;
+
     private int settlementsOnBoard = 0;
     private int citiesOnBoard = 0;
 
@@ -54,6 +56,21 @@ public class Inventory : MonoBehaviour
     private GamePlayer myPlayer;
 
     private OverviewController overviewController;
+
+    // For development cards we have to remember on which turn the card was added.
+    private struct DevelopmentCardInfo
+    {
+        public UnitCode card;
+        public int turn;
+
+        public DevelopmentCardInfo(UnitCode card, int turn)
+        {
+            this.card = card;
+            this.turn = turn;
+        }
+    }
+
+    private List<DevelopmentCardInfo> developmentCards = new List<DevelopmentCardInfo>();
     
     public void Start()
     {
@@ -220,6 +237,13 @@ public class Inventory : MonoBehaviour
                 playerScore++;
                 hiddenPlayerScore++;
                 break;
+            case UnitCode.VICTORY_CARD:
+
+                overviewController.SetVictoryPoint(UnitCode.VICTORY_CARD, stock[(int)UnitCode.VICTORY_CARD]);
+
+                playerScore++; // remove later
+                hiddenPlayerScore++;
+                break;
         }
 
         if (playerScore == 1)
@@ -325,5 +349,96 @@ public class Inventory : MonoBehaviour
         
     }
 
+    public void ReceiveDevelopmentCard(UnitCode receivedCard)
+    {
 
+        GiveToPlayer(receivedCard, 1);
+        developmentCards.Add(new DevelopmentCardInfo(receivedCard, myPlayer.CurrentTurn));
+
+        if (receivedCard == UnitCode.VICTORY_CARD)
+        {
+            AddVictoryPoint(UnitCode.VICTORY_CARD);
+        }
+    }
+
+    public bool CanPlayDevelopmentCard(UnitCode card)
+    {
+        foreach (DevelopmentCardInfo info in developmentCards)
+        {
+            if (info.turn < myPlayer.CurrentTurn)
+            {
+                if (info.card == card)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Found a card that can be played. Remove it from the development cards.
+    public void PlayDevelopmentCard(UnitCode card)
+    {
+        // Remove the first instance of the DevelopmentCardInfo from the list. 
+
+        int index = 0;
+        foreach (DevelopmentCardInfo info in developmentCards)
+        {
+            if (info.card == card && info.turn < myPlayer.CurrentTurn)
+            {
+                break;
+            }
+            index++;
+        }
+
+        developmentCards.RemoveAt(index);
+        TakeFromPlayer(card, 1);
+
+        // Announce the playing to the event text.
+        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.DEVELOPMENT_CARD_PLAYED, PhotonNetwork.LocalPlayer, (int)card);
+
+        switch (card)
+        {
+            case UnitCode.KNIGHT:
+                knightCardsPlayed++;
+                LargestArmyCheck();
+
+                // Let the local player move the bandit.
+                myPlayer.MoveBandit();
+                break;
+            case UnitCode.EXPANSION:
+
+                // The player may immediately place 2 free roads on the board.
+
+                myPlayer.SetPhase(GamePlayer.Phase.PLAYED_EXPANSION_CARD);
+                break;
+            case UnitCode.YEAR_OF_PLENTY:
+
+                // The player may immediately take 2 Resource cards from the supply.
+                GameObject.Find("TradeController").GetComponent<TradeController>().YearOfPlentyInit();
+
+                break;
+            case UnitCode.MONOPOLY:
+
+                // The player selects a resource type. Other players give this player ALL of their cards of this resource type.
+                break;
+            case UnitCode.VICTORY_CARD:
+
+                // Clicking this card has no effect.
+                break;
+        }
+
+        
+    }
+
+    private void LargestArmyCheck()
+    {
+        if (knightCardsPlayed < 3)
+        {
+            return;
+        }
+
+        // If we overtook the maximum, take the Largest Army card.
+    }
 }

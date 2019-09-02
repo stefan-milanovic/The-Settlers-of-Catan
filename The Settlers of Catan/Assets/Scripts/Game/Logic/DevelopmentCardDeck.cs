@@ -30,7 +30,6 @@ public class DevelopmentCardDeck : MonoBehaviour
 
     private PhotonView photonView;
 
-
         
     // Start is called before the first frame update
     void Start()
@@ -170,4 +169,5 @@ public class DevelopmentCardDeck : MonoBehaviour
 
         // Update deck graphics.
     }
+    
 }

@@ -63,6 +63,8 @@ public class Card : MonoBehaviour
 
     private bool IsResourceCard() { return unitCode >= Inventory.UnitCode.BRICK && unitCode <= Inventory.UnitCode.WOOL; }
 
+    private bool IsDevelopmentCard() { return unitCode >= Inventory.UnitCode.KNIGHT && unitCode <= Inventory.UnitCode.VICTORY_CARD; }
+
     public void UpdateCard(int newAmount)
     {
         stockCount.text = "x" + newAmount;
@@ -154,7 +156,7 @@ public class Card : MonoBehaviour
 
         Debug.Log("Card " + unitCode + " clicked!");
 
-        // Construction cards -- check if the player is in BUILD
+        // Construction cards -- Available only if the player is in the build phase.
         if (IsConstructionCard())
         {
             if (inventory.GetPlayer().GetPhase() == GamePlayer.Phase.TRADE_BUILD_IDLE)
@@ -246,6 +248,33 @@ public class Card : MonoBehaviour
                 inventory.GiveToPlayer(this.unitCode, 1);
                 discardController.RetractResourceDiscard(this.unitCode, 1);
             }
+        }
+
+        // Development cards -- If they're available this turn, prompt the player to confirm whether or not to play them.
+
+        if (IsDevelopmentCard()) {
+
+            // A victory card cannot be played.
+            if (unitCode == Inventory.UnitCode.VICTORY_CARD)
+            {
+                return;
+            }
+
+            // If it is not this player's turn, disable development card usage.
+            if (inventory.GetPlayer().IsMyTurn() == false)
+            {
+                return;
+            }
+
+            // If the player is not in the IDLE phase, return.
+
+            if (inventory.GetPlayer().GetPhase() != GamePlayer.Phase.TRADE_BUILD_IDLE)
+            {
+                return;
+            }
+
+            // Show the play development card confirmation panel.
+            GameObject.Find("ShopController").GetComponent<ShopController>().PlayDevelopmentCard(this.unitCode);
         }
     }
     
