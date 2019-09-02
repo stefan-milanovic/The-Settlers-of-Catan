@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using UnityEngine.UI;
+using TMPro;
 
 public class RoomButton : MonoBehaviour
 {
+    
+    [SerializeField]
+    private TextMeshProUGUI roomText;
 
     [SerializeField]
-    private Text titleText;
-
-    [SerializeField]
-    private Text sizeText;
+    private TextMeshProUGUI countText;
 
     private string roomName;
     private int roomSize;
     private int playerCount;
-
     
-
     // Start is called before the first frame update
     void Start()
     {
@@ -42,7 +41,7 @@ public class RoomButton : MonoBehaviour
         roomSize = size;
         playerCount = count;
 
-        titleText.text = name;
-        sizeText.text = "(" + count + "/" + size + ")";
+        roomText.text = name;
+        countText.text = "(" + count + "/" + size + ")";
     }
 }

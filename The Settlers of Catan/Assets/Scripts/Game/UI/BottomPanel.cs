@@ -102,13 +102,18 @@ public class BottomPanel : MonoBehaviour
         {
 
             // Toggle the display of the buy button if the Development tab is being opened.
-            if (panelToOpen == PanelCode.DEVELOPMENT || currentOpenPanel == PanelCode.DEVELOPMENT)
+            if (panelToOpen == PanelCode.DEVELOPMENT)
             {
                 GamePlayer localPlayer = GamePlayer.FindLocalPlayer();
                 if (localPlayer.IsMyTurn())
                 {
-                    ToggleDevelopmentBuyPanelVisibility();
+                    ShowDevelopmentBuyPanel();
                 }
+            }
+            
+            if (currentOpenPanel == PanelCode.DEVELOPMENT)
+            {
+                HideDevelopmentBuyPanel();
             }
 
             DisplayPanel(oldPanelName, false);
@@ -200,6 +205,15 @@ public class BottomPanel : MonoBehaviour
         }
     }
 
+    public void ShowDevelopmentBuyPanel()
+    {
+        developmentBuyPanel.SetActive(true);
+    }
+
+    private void HideDevelopmentBuyPanel()
+    {
+        developmentBuyPanel.SetActive(false);
+    }
     #region Bottom Right Buttons
 
     public void DisplayRollDiceButton()

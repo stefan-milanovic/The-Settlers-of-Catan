@@ -23,21 +23,25 @@ public class RoomController : MonoBehaviourPunCallbacks
 
     [SerializeField]
     private Transform playerList;
-
-    [SerializeField]
-    private GameObject playerSlotPrefab; //Instantiate to display each player in the room
+    
 
     [SerializeField]
     private TextMeshProUGUI roomTitle; //display for the name of the room
 
+    [SerializeField]
+    private TextMeshProUGUI[] roomPlayerSlots;
 
     private MainMenu mainMenu;
     private ChatController chatController;
+
+    private PhotonView photonView;
+
     // Start is called before the first frame update
     void Start()
     {
         mainMenu = GameObject.Find("MainMenuControls").GetComponent<MainMenu>();
         chatController = GameObject.Find("ChatController").GetComponent<ChatController>();
+        photonView = GetComponent<PhotonView>();
     }
 
     // Update is called once per frame
@@ -46,26 +50,41 @@ public class RoomController : MonoBehaviourPunCallbacks
 
 
     }
-
-    private void ClearPlayerList()
-    {
-        for (int i = playerList.childCount - 1; i >= 0; i--)
-        {
-            Destroy(playerList.GetChild(i).gameObject);
-        }
-    }
-
+    
     private void ListPlayers()
     {
-        foreach (Player player in PhotonNetwork.PlayerList)
+        for (int i = 0; i < roomPlayerSlots.Length; i++)
         {
-            GameObject slot = Instantiate(playerSlotPrefab, playerList);
-            TextMeshProUGUI slotText = slot.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
-
-            slotText.text = player.NickName;
+            Player player;
+            if (i >= PhotonNetwork.PlayerList.Length)
+            {
+                player = null;
+            }
+            else
+            {
+                player = PhotonNetwork.PlayerList[i];
+            }
+            if (player != null)
+            {
+                roomPlayerSlots[i].text = player.NickName;
+            }
+            else
+            {
+                roomPlayerSlots[i].text = "<color=#A6A6A6>Empty</color>";
+            }
         }
     }
 
+    public void RefreshPlayerList()
+    {
+        photonView.RPC("RPCRefreshPlayerList", RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPCRefreshPlayerList()
+    {
+        ListPlayers();
+    }
 
     public override void OnJoinedRoom()
     {
@@ -77,6 +96,11 @@ public class RoomController : MonoBehaviourPunCallbacks
         // Join room chat as well.
         chatController.JoinChat(PhotonNetwork.CurrentRoom.Name);
 
+        
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 4)
+        {
+
+        }
         // do this code only when it's (4/4)
         if (PhotonNetwork.IsMasterClient)
         {
@@ -87,19 +111,19 @@ public class RoomController : MonoBehaviourPunCallbacks
             startButton.SetActive(false);
         }
 
-        ClearPlayerList();
+        //ClearPlayerList();
         ListPlayers();
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        ClearPlayerList();
+        //ClearPlayerList();
         ListPlayers();
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        ClearPlayerList();
+        //ClearPlayerList();
         ListPlayers();
         if (PhotonNetwork.IsMasterClient)
         {
@@ -115,12 +139,7 @@ public class RoomController : MonoBehaviourPunCallbacks
             PhotonNetwork.LoadLevel(multiplayerSceneIndex);
         }
     }
-
-    IEnumerator RejoinLobby()
-    {
-        yield return new WaitForSeconds(1);
-        PhotonNetwork.JoinLobby();
-    }
+   
 
     public void LeaveRoom()
     {
@@ -130,6 +149,7 @@ public class RoomController : MonoBehaviourPunCallbacks
         // PhotonNetwork.LeaveLobby();
         // StartCoroutine(rejoinLobby());
 
+        chatController.SendChatMessage("has left the room.");
         chatController.LeaveChat();
         PhotonNetwork.LeaveRoom();
     }

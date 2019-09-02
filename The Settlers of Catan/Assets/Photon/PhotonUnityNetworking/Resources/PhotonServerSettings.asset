@@ -58,5 +58,6 @@ MonoBehaviour:
   - SetDeck
   - RPCSetDeck
   - RPCTakeCard
+  - RPCRefreshPlayerList
   DisableAutoOpenWizard: 1
   ShowSettings: 1

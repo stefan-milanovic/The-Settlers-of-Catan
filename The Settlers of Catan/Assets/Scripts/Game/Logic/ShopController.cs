@@ -51,14 +51,23 @@ public class ShopController : MonoBehaviour
         TextMeshProUGUI popupText = purchasePanel.transform.GetChild(0).gameObject.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
 
         popupText.text = "One development card costs 1x" + ColourUtility.GetResourceText(Inventory.UnitCode.GRAIN) + ", 1x" + ColourUtility.GetResourceText(Inventory.UnitCode.ORE) + ", and 1x" + ColourUtility.GetResourceText(Inventory.UnitCode.WOOL) + ".\n";
-        if (inventory.CanBuyDevelopmentCard())
+
+        if (!deck.IsEmpty())
         {
-            popupText.text += "<color=green>You have enough resources to buy a development card.</color>";
-            confirmButton.interactable = true;
+            if (inventory.CanBuyDevelopmentCard())
+            {
+                popupText.text += "<color=green>You have enough resources to buy a development card.</color>";
+                confirmButton.interactable = true;
+            }
+            else
+            {
+                popupText.text += "<color=red>You do not have enough resources to buy a development card.</color>";
+                confirmButton.interactable = false;
+            }
         }
         else
         {
-            popupText.text += "<color=red>You do not have enough resources to buy a development card.</color>";
+            popupText.text += "<color=red>The development card deck is empty.</color>";
             confirmButton.interactable = false;
         }
 
@@ -72,11 +81,13 @@ public class ShopController : MonoBehaviour
         purchasePanel.SetActive(false);
     }
 
+
+    // If this is called a card surely exists in the development card deck.
     public void PurchasePanelConfirmPress()
     {
         // Close panel. Get a development card from the deck.
         purchasePanel.SetActive(false);
-
+        
         // Pay the card cost.
         inventory.TakeFromPlayer(Inventory.UnitCode.GRAIN, 1);
         inventory.TakeFromPlayer(Inventory.UnitCode.ORE, 1);

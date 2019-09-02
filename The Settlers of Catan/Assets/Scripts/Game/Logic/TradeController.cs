@@ -102,7 +102,7 @@ public class TradeController : MonoBehaviour
 
         for (int i = 0, j = 0; i < 4; i++)
         {
-            Player player = PhotonNetwork.CurrentRoom.GetPlayer(i + 1);
+            Player player = (i >= PhotonNetwork.PlayerList.Length) ? null : PhotonNetwork.PlayerList[i];
 
             if (player != PhotonNetwork.LocalPlayer && player != null)
             {

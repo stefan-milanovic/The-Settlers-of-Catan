@@ -118,7 +118,7 @@ public class EventTextController : MonoBehaviour
         
         if (firstPass)
         {
-            yield return new WaitForSeconds(3);
+            yield return new WaitForSeconds(1);
         }
         
 
@@ -192,14 +192,14 @@ public class EventTextController : MonoBehaviour
         switch (code)
         {
             case EventCode.FIRST_TURN_PHASE_ONE:
-                audioSource.Play();
+                
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + "</color>" + " is placing their first settlement.";
                 
             case EventCode.FIRST_TURN_PHASE_TWO:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their first road.";
                
             case EventCode.SECOND_TURN_PHASE_ONE:
-                audioSource.Play();
+                
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their second settlement.";
                 
             case EventCode.SECOND_TURN_PHASE_TWO:
@@ -211,7 +211,7 @@ public class EventTextController : MonoBehaviour
             case EventCode.CITY_CONSTRUCTED:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " upgraded a settlement into a city.";
             case EventCode.PRE_DICE_ROLL:
-                audioSource.Play();
+                
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is rolling the dice.";
                 
             case EventCode.DICE_ROLLED:

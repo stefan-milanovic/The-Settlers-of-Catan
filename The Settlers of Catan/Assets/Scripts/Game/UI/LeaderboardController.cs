@@ -30,6 +30,7 @@ public class LeaderboardController : MonoBehaviour
     {
 
     }
+    
 
     // Called when the local player earns some points.
     public void UpdateLeaderboard(int localPlayerId, int newPoints)
@@ -47,16 +48,25 @@ public class LeaderboardController : MonoBehaviour
 
         for (int l = 0; l < playersSorted.Length; l++)
         {
-            playersSorted[l] = l + 1;
+            playersSorted[l] = PhotonNetwork.PlayerList[l].ActorNumber;
         }
-        pointsSorted[playerId - 1] = newPoints;
+
+        // 0 1 2 
+        // 3 4 6
+        // 2 3 2
+
+        // 4 -> pos = 1
+
+        // Find position in PlayerList based on playerId.
+        int position = GamePlayer.FindPosition(playerId);
+        pointsSorted[position] = newPoints;
         foreach (PlayerSlot slot in playerSlots)
         {
             if (!slot.Initialised) { continue; }
 
             if (slot.PlayerId != playerId)
             {
-                pointsSorted[slot.PlayerId - 1] = slot.Score;
+                pointsSorted[GamePlayer.FindPosition(slot.PlayerId)] = slot.Score;
             }
         }
 
@@ -75,7 +85,7 @@ public class LeaderboardController : MonoBehaviour
                     pointsSorted[i] = pointsSorted[j];
 
                     playersSorted[j] = playerTemp;
-                    pointsSorted[j] = playerTemp;
+                    pointsSorted[j] = pointTemp;
                 }
             }
         }

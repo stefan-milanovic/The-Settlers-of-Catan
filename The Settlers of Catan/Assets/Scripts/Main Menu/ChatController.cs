@@ -45,7 +45,7 @@ public class ChatController : MonoBehaviour, IChatClientListener
     //         "To clear the current chat tab (private chats get closed):\n" +
     //         "\t<color=#E07B00>\\clear</color>";
 
-    private static string HelpText = "<color=red>No one can help you.</color>";
+    private static string HelpText = "<color=red>No one can help you.\n</color>";
     private const int HISTORY_LENGTH = 5;
     
     public ChatClient chatClient;
@@ -108,7 +108,6 @@ public class ChatController : MonoBehaviour, IChatClientListener
 
     public void JoinChat(string roomName)
     {
-        Debug.Log(PhotonNetwork.NickName);
         Connect();
         selectedChannelName = roomName;
     }
@@ -181,7 +180,7 @@ public class ChatController : MonoBehaviour, IChatClientListener
         }
     }
 
-    private void SendChatMessage(string inputLine)
+    public void SendChatMessage(string inputLine)
     {
         if (string.IsNullOrEmpty(inputLine))
         {

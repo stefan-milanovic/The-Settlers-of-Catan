@@ -33,6 +33,11 @@ public class Intersection : MonoBehaviour
     private GameObject shortFlag;
     private GameObject longFlag;
 
+    private GameObject settlementRoof;
+
+    private GameObject cityRoof1;
+    private GameObject cityRoof2;
+
     private PhotonView photonView;
 
     [SerializeField]
@@ -59,6 +64,11 @@ public class Intersection : MonoBehaviour
 
         shortFlag = shortFlagObject.transform.GetChild(0).gameObject;
         longFlag = longFlagObject.transform.GetChild(0).gameObject;
+
+        settlementRoof = transform.GetChild((int)ChildId.SETTLEMENT).gameObject.transform.GetChild(8).gameObject;
+
+        cityRoof1 = transform.GetChild((int)ChildId.CITY).gameObject.transform.GetChild(33).gameObject;
+        cityRoof2 = transform.GetChild((int)ChildId.CITY).gameObject.transform.GetChild(34).gameObject;
 
         // Set up the neighbouring intersections list.
         neighbouringIntersections = new List<Intersection>();
@@ -201,6 +211,13 @@ public class Intersection : MonoBehaviour
         
 
         shortFlagObject.SetActive(true);
+
+        // Set roof colour.
+        string roofPath = "Materials/PlayerMaterials/RoofP" + ownerId;
+
+        settlementRoof.GetComponent<MeshRenderer>().material = Resources.Load(roofPath) as Material;
+        settlementRoof.GetComponent<MeshRenderer>().material.SetColor("_Color", playerColour);
+
     }
     private void HideShortFlag()
     {
@@ -216,6 +233,15 @@ public class Intersection : MonoBehaviour
         longFlag.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", playerColour);
 
         longFlagObject.SetActive(true);
+
+        // Set roof colour.
+        string roofPath = "Materials/PlayerMaterials/RoofCityP" + ownerId;
+
+        cityRoof1.GetComponent<MeshRenderer>().material = Resources.Load(roofPath) as Material;
+        cityRoof1.GetComponent<MeshRenderer>().material.SetColor("_Color", playerColour);
+
+        cityRoof2.GetComponent<MeshRenderer>().material = Resources.Load(roofPath) as Material;
+        cityRoof2.GetComponent<MeshRenderer>().material.SetColor("_Color", playerColour);
     }
 
     public bool OnHarbour(out HarbourPath.HarbourBonus? bonus)

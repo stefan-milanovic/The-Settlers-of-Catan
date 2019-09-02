@@ -29,6 +29,8 @@ public class DevelopmentCardDeck : MonoBehaviour
     private Queue<Inventory.UnitCode> deck;
 
     private PhotonView photonView;
+
+
         
     // Start is called before the first frame update
     void Start()
@@ -147,6 +149,9 @@ public class DevelopmentCardDeck : MonoBehaviour
         }
     }
 
+    public bool IsEmpty() { return deck.Count == 0; }
+
+    // This method is called only if the deck has cards.
     public Inventory.UnitCode TakeCard()
     {
         // Take a card from the top of the deck.

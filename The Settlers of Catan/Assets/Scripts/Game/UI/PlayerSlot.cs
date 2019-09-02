@@ -74,7 +74,7 @@ public class PlayerSlot : MonoBehaviour
     {
         if (initialised)
         {
-            Player player = PhotonNetwork.CurrentRoom.GetPlayer(playerId);
+            Player player = PhotonNetwork.PlayerList[GamePlayer.FindPosition(playerId)];
 
             string username = player.CustomProperties["username"] as string;
             string colour = player.CustomProperties["colour"] as string;

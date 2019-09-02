@@ -43,15 +43,18 @@ public class DiceController : MonoBehaviour
     {
 
         // Only roll the die if the event controller isn't busy.
-        if (GameObject.Find("EventTextController").GetComponent<EventTextController>().IsBusy())
-        {
-            return;
-        }
+        //if (GameObject.Find("EventTextController").GetComponent<EventTextController>().IsBusy())
+       // {
+        //    return;
+        //}
 
         foreach (Dice die in dice)
         {
             die.RollDice();
         }
+
+        // Disable rolling for the current player.
+        player.DisableRollDiceButton();
     }
 
     public void DiceFallen(int diceValue)

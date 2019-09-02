@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: RoadCardFont
   m_EditorClassIdentifier: 
-  hashCode: 90908855
+  hashCode: 1109431999
   material: {fileID: 21577413365061016}
   materialHashCode: 1895397711
   fontAssetType: 1

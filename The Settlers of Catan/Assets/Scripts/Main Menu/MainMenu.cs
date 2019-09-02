@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,6 +27,23 @@ public class MainMenu : MonoBehaviour
     private LobbyController lobbyController;
     private RoomController roomController;
 
+    [SerializeField]
+    private GameObject connectionPanel;
+
+    [SerializeField]
+    private Button startNewGameButton;
+
+    [SerializeField]
+    private Button tutorialButton;
+
+    [SerializeField]
+    private Button aboutButton;
+
+    [SerializeField]
+    private Button exitButton;
+
+    [SerializeField]
+    private InputField playingAsField;
 
     [SerializeField]
     private GameObject errorBar;
@@ -39,8 +57,13 @@ public class MainMenu : MonoBehaviour
         
         // Connect to Photon servers.
         lobbyController.ConnectToServer();
-        
+
+
+        // Fill in input field.
+        playingAsField.text = PlayerPrefs.GetString("Username");
     }
+
+   
 
     // Update is called once per frame
     void Update()
@@ -208,7 +231,7 @@ public class MainMenu : MonoBehaviour
     {
         ToggleWindow(WindowCode.ROOM_CREATION_WINDOW);
 
-        lobbyController.JoinPhotonLobby();
+        PhotonNetwork.JoinLobby();
     }
 
     public void RoomCreationBackPress()
@@ -220,8 +243,7 @@ public class MainMenu : MonoBehaviour
     {
 
         string roomName = GameObject.FindGameObjectWithTag("RoomNameField").GetComponent<InputField>().text;
-        string password = GameObject.FindGameObjectWithTag("RoomPasswordField").GetComponent<InputField>().text;
-        lobbyController.CreateRoom(roomName, password);
+        lobbyController.CreateRoom(roomName);
         
     }
 
@@ -229,15 +251,14 @@ public class MainMenu : MonoBehaviour
     public void JoinLobbyButtonPress()
     {
         ToggleWindow(WindowCode.LOBBY_WINDOW);
-
-        lobbyController.JoinPhotonLobby();
+        PhotonNetwork.JoinLobby();
     }
 
     public void LobbyBackPress()
     {
         ToggleWindow(WindowCode.START_NEW_GAME_WINDOW);
 
-        lobbyController.MatchmakingCancel();
+        //lobbyController.MatchmakingCancel();
     }
     
     public void RoomLeavePress()
@@ -273,6 +294,18 @@ public class MainMenu : MonoBehaviour
         StartCoroutine(BarFadeOut());
     }
 
+    public void ActivateBottomButtons()
+    {
+        StartCoroutine(ConnectionBarFadeOut());
+        startNewGameButton.interactable = true;
+        tutorialButton.interactable = true;
+        aboutButton.interactable = true;
+        exitButton.interactable = true;
+
+        playingAsField.interactable = true;
+
+    }
+
     IEnumerator BarFadeOut()
     {
 
@@ -285,5 +318,16 @@ public class MainMenu : MonoBehaviour
         }
         
         errorBar.SetActive(false);
+    }
+
+    IEnumerator ConnectionBarFadeOut()
+    {
+        for (float f = 1f; f >= -0.025f; f -= 0.025f)
+        {
+            connectionPanel.GetComponent<CanvasGroup>().alpha -= 0.025f;
+            yield return new WaitForSeconds(0.025f);
+        }
+
+        connectionPanel.SetActive(false);
     }
 }

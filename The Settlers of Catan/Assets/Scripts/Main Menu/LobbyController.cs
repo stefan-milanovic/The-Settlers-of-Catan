@@ -19,7 +19,7 @@ public class LobbyController : MonoBehaviourPunCallbacks
 
 
     private string roomName;
-    private List<RoomInfo> localRoomsList;
+    private List<RoomInfo> localRoomsList = new List<RoomInfo>();
 
     [SerializeField]
     private Transform roomsContainer;
@@ -44,29 +44,34 @@ public class LobbyController : MonoBehaviourPunCallbacks
         
     }
 
-    // when we first connect to the Photon servers
-
     public override void OnConnectedToMaster()
     {
         PhotonNetwork.AutomaticallySyncScene = true;
-        //lobbyConnectButton.SetActive(true);
-        localRoomsList = new List<RoomInfo>();
 
-        // player name : 9min in https://www.youtube.com/watch?v=onDorc3Qfn0
-
-        // Initialize player name.
-        PlayerNameUpdate(START_NAME);
+        mainMenu.ActivateBottomButtons();
+        
+        if (PlayerPrefs.GetString("Username") != null)
+        {
+            PlayerNameUpdate(PlayerPrefs.GetString("Username"));
+        }
+        else
+        {
+            PlayerNameUpdate(START_NAME);
+        }
+        
     }
+
 
     public void PlayerNameUpdate(string newName)
     {
         PhotonNetwork.NickName = newName;
         PlayerPrefs.SetString("Username", newName);
-    }
 
-    public void JoinPhotonLobby()
-    {
-        PhotonNetwork.JoinLobby();
+        // If the player is in a room, change room display name.
+        if (PhotonNetwork.InRoom)
+        {
+            GameObject.Find("RoomController").GetComponent<RoomController>().RefreshPlayerList();
+        }
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
@@ -117,9 +122,9 @@ public class LobbyController : MonoBehaviourPunCallbacks
         }
     }
     
-    public void CreateRoom(string roomName, string password)
+    public void CreateRoom(string roomName)
     {
-        RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = MAX_NUMBER_OF_PLAYERS };
+        RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = MAX_NUMBER_OF_PLAYERS, PlayerTtl = 0 };
 
         PhotonNetwork.CreateRoom(roomName, roomOps);
     }
@@ -128,17 +133,9 @@ public class LobbyController : MonoBehaviourPunCallbacks
     {
         //PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
         //{
-        //    ["leaderboardSlot1"] = 0,
-        //    ["leaderboardSlot2"] = 0,
-        //    ["leaderboardSlot3"] = 0,
-        //    ["leaderboardSlot4"] = 0
-        //},
-        //new ExitGames.Client.Photon.Hashtable
-        //{
-        //    ["leaderboardSlot1"] = 0,
-        //    ["leaderboardSlot2"] = 0,
-        //    ["leaderboardSlot3"] = 0,
-        //    ["leaderboardSlot4"] = 0
+        //    ["playerSlot2"] = 0,
+        //    ["playerSlot3"] = 0,
+        //    ["playerSlot4"] = 0
         //}
         //);
     }
@@ -153,13 +150,7 @@ public class LobbyController : MonoBehaviourPunCallbacks
         mainMenu.DisplayRoomCreationErrorMessage();
 
     }
-
-
-    public void MatchmakingCancel()
-    {
-        PhotonNetwork.LeaveLobby();
-    }
-
+    
     public void ConnectToServer()
     {
         PhotonNetwork.ConnectUsingSettings();

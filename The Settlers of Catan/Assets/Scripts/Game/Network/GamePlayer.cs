@@ -98,15 +98,17 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     protected Button rollDiceButton;
 
+    protected AudioSource audioSource;
+
     // Start is called before the first frame update
     void Start()
     {
-       
+        
     }
     
     protected void Init()
     {
-
+        audioSource = GameObject.Find("AudioSources").GetComponent<AudioSource>();
         rollDiceButton = GameObject.Find("RollDiceButton").GetComponent<Button>();
     }
 
@@ -189,13 +191,13 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         if (turn == 1)
         {
 
-            
-
-            currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(1);
+            currentPlayer = PhotonNetwork.PlayerList[0];
 
             setUpPhase = true;
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
+
+                
 
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
@@ -206,29 +208,32 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
 
                 myTurn = true;
+                audioSource.Play();
             }
         }
         else if (turn == 2)
         {
 
-            currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.CurrentRoom.PlayerCount);
+            currentPlayer = PhotonNetwork.PlayerList[PhotonNetwork.PlayerList.Length - 1];
 
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
                 Debug.Log("In turn2 the player to play is: " + PhotonNetwork.LocalPlayer.ActorNumber + ", name = " + PhotonNetwork.LocalPlayer.NickName);
                 myTurn = true;
+                audioSource.Play();
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
             }
 
         } else if (turn == 3)
         {
-            
-            currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(1);
-            
+
+            currentPlayer = PhotonNetwork.PlayerList[0];
+
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
                 myTurn = true;
+                audioSource.Play();
                 setUpPhase = false;
                 currentPhase = Phase.ROLL_DICE;
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
@@ -237,11 +242,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         } else
         {
-            currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(1);
+            currentPlayer = PhotonNetwork.PlayerList[0];
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
                 Debug.Log("In turn" + turn + " the player to play is: " + PhotonNetwork.LocalPlayer.ActorNumber + ", name = " + PhotonNetwork.LocalPlayer.NickName);
                 myTurn = true;
+                audioSource.Play();
                 currentPhase = Phase.ROLL_DICE;
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
@@ -411,7 +417,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 // Only the player who rolled the 7 does this.
                 if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
                 {
-                    haveToDiscard[moveMessage[2]] = moveMessage[3] == 1 ? true : false;
+                    haveToDiscard[FindPosition(moveMessage[2])] = moveMessage[3] == 1 ? true : false;
                     acknowledged++;
                     if (acknowledged == PhotonNetwork.CurrentRoom.PlayerCount)
                     {
@@ -422,7 +428,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                         {
                             if (haveToDiscard[i])
                             {
-                                playerList.Add(PhotonNetwork.CurrentRoom.GetPlayer(i).ActorNumber);
+                                playerList.Add(PhotonNetwork.PlayerList[i].ActorNumber);
                                 waitingForDiscardCount++;
                             }
                         }
@@ -505,7 +511,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
 
     // Connectors calls - 
-    public void OnPlayerFinished(Player player, int turn, object move)
+    public void OnPlayerFinished(Player sender, int turn, object move)
     {
         // Player <player> has ended their turn on their machine. End it locally as well.
 
@@ -516,14 +522,24 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
         Player nextPlayer;
 
+        int prevPlayerPosition = -1;
+        for (int i = 0; i < PhotonNetwork.PlayerList.Length; i++)
+        {
+            if (sender.ActorNumber == PhotonNetwork.PlayerList[i].ActorNumber)
+            {
+                prevPlayerPosition = i;
+                break;
+            }
+        }
+
         if (currentTurn != 2)
         {
-            nextPlayer = player.GetNext();
+            nextPlayer = PhotonNetwork.PlayerList[prevPlayerPosition + 1];
         }
         else
         {
             // LIFO setup.
-            nextPlayer = player.Get(player.ActorNumber - 1);
+            nextPlayer = PhotonNetwork.PlayerList[prevPlayerPosition - 1];
         }
 
         if (nextPlayer == null)
@@ -544,10 +560,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
                 setUpPhase = true;
                 myTurn = true;
+                audioSource.Play();
             }
             else if (turn == 2)
             {
                 myTurn = true;
+                audioSource.Play();
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
             }
@@ -556,12 +574,14 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 setUpPhase = false;
                 currentPhase = Phase.ROLL_DICE;
                 myTurn = true;
+                audioSource.Play();
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
             }
             else
             {
                 myTurn = true;
+                audioSource.Play();
                 currentPhase = Phase.ROLL_DICE;
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
@@ -571,7 +591,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     public void OnTurnTimeEnds(int turn)
     {
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
 
@@ -785,7 +805,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         bottomPanel.DisableEndingTurn();
 
     }
-    protected void DisableRollDiceButton()
+    public void DisableRollDiceButton()
     {
         BottomPanel bottomPanel = GameObject.Find("BottomPanel").GetComponent<BottomPanel>();
         bottomPanel.DisableRollDiceButton();
@@ -894,12 +914,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
                     int[] resourceIncomeMessage = new int[4];
                     resourceIncomeMessage[0] = (int)MessageCode.RESOURCE_INCOME;
-                    resourceIncomeMessage[1] = i + 1;
+                    resourceIncomeMessage[1] = PhotonNetwork.PlayerList[i].ActorNumber;
                     resourceIncomeMessage[2] = (int)resourceType;
                     resourceIncomeMessage[3] = incomeByPlayer[i];
 
                     turnManager.SendMove(resourceIncomeMessage, false);
-                    eventTextController.SendEvent(EventTextController.EventCode.RESOURCE_EARNED, PhotonNetwork.CurrentRoom.GetPlayer(i + 1), resourceIncomeMessage[2], resourceIncomeMessage[3]);
+                    eventTextController.SendEvent(EventTextController.EventCode.RESOURCE_EARNED, PhotonNetwork.PlayerList[i], resourceIncomeMessage[2], resourceIncomeMessage[3]);
                 }
             }
             
@@ -983,5 +1003,17 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         int[] gameOverMessage = new int[1];
         gameOverMessage[0] = (int)MessageCode.GAME_OVER;
         turnManager.SendMove(gameOverMessage, false);
+    }
+
+    public static int FindPosition(int ownerId)
+    {
+        for (int i = 0; i < PhotonNetwork.PlayerList.Length; i++)
+        {
+            if (PhotonNetwork.PlayerList[i].ActorNumber == ownerId)
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 }

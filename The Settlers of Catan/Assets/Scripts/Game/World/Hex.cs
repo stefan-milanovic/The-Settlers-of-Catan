@@ -165,7 +165,7 @@ public class Hex : MonoBehaviour
             {
                 int ownerId = i.GetOwnerId();
 
-                income[ownerId - 1] += (i.HasSettlement() ? 1 : 2);
+                income[GamePlayer.FindPosition(ownerId)] += (i.HasSettlement() ? 1 : 2);
             }
         }
 
@@ -197,4 +197,5 @@ public class Hex : MonoBehaviour
         bandit.SetActive(false);
         occupiedByBandit = false;
     }
+
 }
