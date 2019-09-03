@@ -207,9 +207,9 @@ public class Card : MonoBehaviour
             if (gameObject.tag == "InventoryCard")
             {
                 
-                if (tradeController.IsTrading())
+                if (tradeController.IsTrading() && !tradeController.IsYearOfPlenty())
                 {
-                    // Move 1 stock from the inventory to the local offers slot.
+                    // Move 1 stock from the inventory to the local offers slot if the player isn't playing a Year of Plenty card.
                     inventory.TakeFromPlayer(this.unitCode, 1);
                     tradeController.OfferResource(this.unitCode, 1);
                 }
@@ -239,6 +239,10 @@ public class Card : MonoBehaviour
                     {
                         tradeController.SupplyCardChosen(this.unitCode, 1);
                     }
+                    else if (tradeController.IsYearOfPlenty())
+                    {
+                        tradeController.YearOfPlentyCardChosen(this.unitCode, 1);
+                    }
                 }
             }
             else if (gameObject.tag == "DiscardCard")
@@ -247,6 +251,12 @@ public class Card : MonoBehaviour
 
                 inventory.GiveToPlayer(this.unitCode, 1);
                 discardController.RetractResourceDiscard(this.unitCode, 1);
+            }
+            else if (gameObject.tag == "MonopolyCard")
+            {
+                // Initialise stealing of this resource type from all the other players.
+
+                discardController.MonopolyCardClicked(this.unitCode);
             }
         }
 

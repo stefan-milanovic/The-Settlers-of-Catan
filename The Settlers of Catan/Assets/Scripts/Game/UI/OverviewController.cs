@@ -45,7 +45,7 @@ public class OverviewController : MonoBehaviour
                 scoreText[1].text = "Cities: +" + amount;
                 break;
             case Inventory.UnitCode.LARGEST_ARMY:
-                scoreText[2].text = "Cities: +" + amount;
+                scoreText[2].text = "Largest Army: +" + amount;
                 break;
             case Inventory.UnitCode.LONGEST_ROAD:
                 scoreText[3].text = "Longest Road: +" + amount;

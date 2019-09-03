@@ -48,8 +48,15 @@ public class EventTextController : MonoBehaviour
         RESOURCE_STOLEN,
         DEVELOPMENT_CARD_PURCHASED,
         DEVELOPMENT_CARD_PLAYED,
+        YEAR_OF_PLENTY_INITIATED,
+        YEAR_OF_PLENTY_COMPLETED,
+        MONOPOLY_COMPLETE,
+        LARGEST_ARMY_TAKE_FIRST_TIME,
+        LONGEST_ROAD_TAKE_FIRST_TIME,
+        LARGEST_ARMY_STEAL,
+        LONGEST_ROAD_STEAL,
         END_TURN,
-        GAME_OVER,
+        GAME_OVER
     };
 
     private List<int> discardList;
@@ -204,11 +211,11 @@ public class EventTextController : MonoBehaviour
             case EventCode.SECOND_TURN_PHASE_TWO:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their second road.";
             case EventCode.ROAD_CONSTRUCTED:
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " constructed a road.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has constructed a road.";
             case EventCode.SETTLEMENT_CONSTRUCTED:
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " constructed a settlement.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has constructed a settlement.";
             case EventCode.CITY_CONSTRUCTED:
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " upgraded a settlement into a city.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has upgraded a settlement into a city.";
             case EventCode.PRE_DICE_ROLL:
                 
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is rolling the dice.";
@@ -328,12 +335,31 @@ public class EventTextController : MonoBehaviour
             case EventCode.RESOURCE_STOLEN:
                 stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
                 string resourceText = (string)additionalParams[1];
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " stole 1x" + resourceText + " from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has stolen 1x" + resourceText + " from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + ".";
             case EventCode.DEVELOPMENT_CARD_PURCHASED:
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " purchased a development card from the supply.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has purchased a development card from the supply.";
             case EventCode.DEVELOPMENT_CARD_PLAYED:
                 Inventory.UnitCode cardCode = (Inventory.UnitCode)additionalParams[0];
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " played a " + ColourUtility.GetDevelopmentText(cardCode) + " card!";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has played a " + ColourUtility.GetDevelopmentText(cardCode) + " card!";
+            case EventCode.YEAR_OF_PLENTY_INITIATED:
+                return "Waiting for " + ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " to take 2 free Resource cards.";
+            case EventCode.YEAR_OF_PLENTY_COMPLETED:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has taken two resource cards.";
+            case EventCode.MONOPOLY_COMPLETE:
+                resourceText = (string)additionalParams[0];
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has stolen all " + resourceText + " cards from the other players!";
+                
+            case EventCode.LARGEST_ARMY_TAKE_FIRST_TIME:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has received the <color=black>Largest Army</color> card!";
+            case EventCode.LARGEST_ARMY_STEAL:
+                stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has stolen the <color=black>Largest Army</color> card from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + "!";
+            case EventCode.LONGEST_ROAD_TAKE_FIRST_TIME:
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has received the <color=black>Longest Road</color> card!";
+            case EventCode.LONGEST_ROAD_STEAL:
+                stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has stolen the <color=black>Longest Road</color> card from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + "!";
+
             case EventCode.GAME_OVER:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has won the game! Press ESC to return to the main menu.";
             case EventCode.END_TURN:

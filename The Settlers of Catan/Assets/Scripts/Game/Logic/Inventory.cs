@@ -32,7 +32,7 @@ public class Inventory : MonoBehaviour
     
     private int[] stock =
     {
-        0, 0, 0, 0, 0,
+        10, 10, 10, 10, 10,
         0, 0, 0, 0, 0,
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };
@@ -47,9 +47,18 @@ public class Inventory : MonoBehaviour
     private int hiddenPlayerScore = 0;
 
     private int knightCardsPlayed = 0;
+    private int roadLength = 0;
 
     private int settlementsOnBoard = 0;
     private int citiesOnBoard = 0;
+
+    private int turnDevelopmentCardPlayed = 0;
+
+    private int largestArmyOwnerId = -1;
+    private int largestArmyKnightCount = -1;
+
+    private int longestRoadOwnerId = -1;
+    private int longestRoadLength = -1;
 
     private List<HarbourPath.HarbourBonus> harbourBonuses = new List<HarbourPath.HarbourBonus>();
 
@@ -150,6 +159,14 @@ public class Inventory : MonoBehaviour
         }
 
         UpdateConstructionCards();
+
+        // If the card is a road card, that means that a road was placed on the board by this player.
+        // Calculate his longest road, and take the Longest Road card if all the conditions are met.
+        if (unit == UnitCode.ROAD)
+        {
+            CalculatePlayerRoadLength();
+            LongestRoadCheck();
+        }
         
     }
 
@@ -240,9 +257,25 @@ public class Inventory : MonoBehaviour
             case UnitCode.VICTORY_CARD:
 
                 overviewController.SetVictoryPoint(UnitCode.VICTORY_CARD, stock[(int)UnitCode.VICTORY_CARD]);
-
-                playerScore++; // remove later
+                
                 hiddenPlayerScore++;
+                break;
+            case UnitCode.LARGEST_ARMY:
+
+                overviewController.SetVictoryPoint(UnitCode.LARGEST_ARMY, 2);
+
+                playerScore += 2;
+                hiddenPlayerScore += 2;
+
+                break;
+
+            case UnitCode.LONGEST_ROAD:
+
+                overviewController.SetVictoryPoint(UnitCode.LONGEST_ROAD, 2);
+
+                playerScore += 2;
+                hiddenPlayerScore += 2;
+
                 break;
         }
 
@@ -260,9 +293,28 @@ public class Inventory : MonoBehaviour
         if (CheckWinCondition() == true)
         {
             // Hide end turn button, show Claim Victory button.
-
+            
             GameObject.Find("BottomPanel").GetComponent<BottomPanel>().EnableClaimVictory();
         }
+    }
+
+    private void TakeVictoryPoint(UnitCode pointSource)
+    {
+        switch (pointSource)
+        {
+            case UnitCode.LARGEST_ARMY:
+                overviewController.SetVictoryPoint(UnitCode.LARGEST_ARMY, 0);
+                playerScore -= 2;
+                hiddenPlayerScore -= 2;
+                break;
+            case UnitCode.LONGEST_ROAD:
+                overviewController.SetVictoryPoint(UnitCode.LONGEST_ROAD, 0);
+                playerScore -= 2;
+                hiddenPlayerScore -= 2;
+                break;
+        }
+
+        GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().UpdateLeaderboard(PhotonNetwork.LocalPlayer.ActorNumber, playerScore);
     }
 
     private bool CheckWinCondition()
@@ -377,6 +429,13 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
+    public bool HasPlayedDevelopmentCardThisTurn()
+    {
+        
+        return turnDevelopmentCardPlayed == myPlayer.CurrentTurn;
+        
+    }
+
     // Found a card that can be played. Remove it from the development cards.
     public void PlayDevelopmentCard(UnitCode card)
     {
@@ -394,6 +453,8 @@ public class Inventory : MonoBehaviour
 
         developmentCards.RemoveAt(index);
         TakeFromPlayer(card, 1);
+
+        turnDevelopmentCardPlayed = myPlayer.CurrentTurn;
 
         // Announce the playing to the event text.
         GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.DEVELOPMENT_CARD_PLAYED, PhotonNetwork.LocalPlayer, (int)card);
@@ -416,12 +477,17 @@ public class Inventory : MonoBehaviour
             case UnitCode.YEAR_OF_PLENTY:
 
                 // The player may immediately take 2 Resource cards from the supply.
+
+                // TODO: Add new phase for HumanPlayer to prevent ending turn while doing this
                 GameObject.Find("TradeController").GetComponent<TradeController>().YearOfPlentyInit();
 
                 break;
             case UnitCode.MONOPOLY:
 
                 // The player selects a resource type. Other players give this player ALL of their cards of this resource type.
+
+                // TODO: Add new phase for HumanPlayer to prevent ending turn while doing this
+                GameObject.Find("DiscardController").GetComponent<DiscardController>().MonopolyActivated();
                 break;
             case UnitCode.VICTORY_CARD:
 
@@ -432,6 +498,31 @@ public class Inventory : MonoBehaviour
         
     }
 
+    public void GiveAllOfResourceToPlayer(UnitCode resourceCode, int recepientId)
+    {
+        int amount = stock[(int)resourceCode];
+
+        // Take all cards of this resource type from this player.
+        TakeFromPlayer(resourceCode, amount);
+
+        // Send the resources to the player that played the Monopoly card.
+
+        int[] monopolyReplyMessage = new int[3];
+
+        monopolyReplyMessage[0] = (int)GamePlayer.MessageCode.MONOPOLY_REPLY; // Message code.
+        monopolyReplyMessage[1] = recepientId; // Who should read the message?
+        monopolyReplyMessage[2] = amount; // How much of the resource am I sending? (the Monopoly card player knows which resource is being sent)
+
+        GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(monopolyReplyMessage, false);
+    }
+
+    private void CalculatePlayerRoadLength()
+    {
+        // Check local.
+
+        // Check if chained to another road chain of the player.
+    }
+
     private void LargestArmyCheck()
     {
         if (knightCardsPlayed < 3)
@@ -440,5 +531,92 @@ public class Inventory : MonoBehaviour
         }
 
         // If we overtook the maximum, take the Largest Army card.
+        if (knightCardsPlayed > largestArmyKnightCount)
+        {
+            // Overtake. Send a message so every player updates the current Largest Army owner.
+            
+            if (largestArmyOwnerId == -1)
+            {
+                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LARGEST_ARMY_TAKE_FIRST_TIME, PhotonNetwork.LocalPlayer);
+            }
+            else
+            {
+                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LARGEST_ARMY_STEAL, PhotonNetwork.LocalPlayer, largestArmyOwnerId);
+            }
+
+            largestArmyKnightCount = knightCardsPlayed;
+            largestArmyOwnerId = PhotonNetwork.LocalPlayer.ActorNumber;
+
+            GiveToPlayer(UnitCode.LARGEST_ARMY, 1);
+            AddVictoryPoint(UnitCode.LARGEST_ARMY);
+
+            int[] largestArmyOvertakeMessage = new int[3];
+
+            largestArmyOvertakeMessage[0] = (int)GamePlayer.MessageCode.LARGEST_ARMY_OVERTAKE; // Message code.
+            largestArmyOvertakeMessage[1] = PhotonNetwork.LocalPlayer.ActorNumber; // Who sent the message and who has the card.
+            largestArmyOvertakeMessage[2] = knightCardsPlayed; // How many cards must the next player to contest for this card pass?
+
+            GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(largestArmyOvertakeMessage, false);
+        }
+    }
+
+    private void LongestRoadCheck()
+    {
+        if (roadLength < 5)
+        {
+            return;
+        }
+
+        if (roadLength > longestRoadLength)
+        {
+            if (longestRoadOwnerId == -1)
+            {
+                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LONGEST_ROAD_TAKE_FIRST_TIME, PhotonNetwork.LocalPlayer);
+            }
+            else
+            {
+                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LONGEST_ROAD_STEAL, PhotonNetwork.LocalPlayer, longestRoadOwnerId);
+            }
+
+            longestRoadLength = roadLength;
+            longestRoadOwnerId = PhotonNetwork.LocalPlayer.ActorNumber;
+
+            GiveToPlayer(UnitCode.LONGEST_ROAD, 1);
+            AddVictoryPoint(UnitCode.LONGEST_ROAD);
+
+            int[] longestRoadOvertakeMessage = new int[3];
+
+            longestRoadOvertakeMessage[0] = (int)GamePlayer.MessageCode.LONGEST_ROAD_OVERTAKE; // Message code.
+            longestRoadOvertakeMessage[1] = PhotonNetwork.LocalPlayer.ActorNumber; // Who sent the message and who has the card.
+            longestRoadOvertakeMessage[2] = longestRoadLength; // What road length must be surpassed for the Longest Road card to be acquired?
+
+            GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(longestRoadOvertakeMessage, false);
+        }
+    }
+
+    public void SetLargestArmyOwner(int ownerId, int amount)
+    {
+        // If I previously held this card, remove it from my inventory (and the points).
+
+        if (largestArmyOwnerId == PhotonNetwork.LocalPlayer.ActorNumber)
+        {
+            TakeFromPlayer(UnitCode.LARGEST_ARMY, 1);
+            TakeVictoryPoint(UnitCode.LARGEST_ARMY);
+        }
+
+        largestArmyKnightCount = amount;
+        largestArmyOwnerId = ownerId;
+    }
+
+    public void SetLongestRoadOwner(int ownerId, int roadLength)
+    {
+        if (longestRoadOwnerId == PhotonNetwork.LocalPlayer.ActorNumber)
+        {
+            TakeFromPlayer(UnitCode.LONGEST_ROAD, 1);
+            TakeVictoryPoint(UnitCode.LONGEST_ROAD);
+        }
+
+        longestRoadLength = roadLength;
+        longestRoadOwnerId = ownerId;
     }
 }

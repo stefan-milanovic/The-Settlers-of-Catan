@@ -46,6 +46,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         SEVEN_ROLLED_DISCARD_COMPLETE,
         STEAL_RESOURCE_REQUEST,
         STEAL_RESOURCE_REPLY,
+        MONOPOLY_PLAYED,
+        MONOPOLY_REPLY,
+        LARGEST_ARMY_OVERTAKE,
+        LONGEST_ROAD_OVERTAKE,
         GAME_OVER
     }
 
@@ -492,7 +496,6 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             case MessageCode.STEAL_RESOURCE_REPLY:
 
                 recepientId = moveMessage[1];
-                Debug.Log("steal reply received");
                 if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
                 {
                     // Check which resource the player sent you.
@@ -505,7 +508,45 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                     currentPhase = Phase.TRADE_BUILD_IDLE;
                 }
                 break;
+            case MessageCode.MONOPOLY_PLAYED:
 
+                senderId = moveMessage[1];
+
+                if (PhotonNetwork.LocalPlayer.ActorNumber != senderId)
+                {
+                    // Give ALL of my resources to the sender.
+                    inventory.GiveAllOfResourceToPlayer((Inventory.UnitCode)moveMessage[2], senderId);
+                }
+                break;
+            case MessageCode.MONOPOLY_REPLY:
+
+                recepientId = moveMessage[1];
+
+                if (recepientId == PhotonNetwork.LocalPlayer.ActorNumber)
+                {
+                    // A player has given me all their resource of the adequate type.
+                    GameObject.Find("DiscardController").GetComponent<DiscardController>().MonopolyReplyReceived(moveMessage[2]);
+                }
+                break;
+
+            case MessageCode.LARGEST_ARMY_OVERTAKE:
+
+                senderId = moveMessage[1];
+                if (PhotonNetwork.LocalPlayer.ActorNumber != senderId)
+                {
+                    inventory.SetLargestArmyOwner(senderId, moveMessage[2]);
+                }
+
+                break;
+            case MessageCode.LONGEST_ROAD_OVERTAKE:
+
+                senderId = moveMessage[1];
+                if (PhotonNetwork.LocalPlayer.ActorNumber != senderId)
+                {
+                    inventory.SetLongestRoadOwner(senderId, moveMessage[2]);
+                }
+
+                break;
             case MessageCode.GAME_OVER:
 
                 // A player has signalled that the game is over. Allow the local player to go back to the main menu by pressing ESC.

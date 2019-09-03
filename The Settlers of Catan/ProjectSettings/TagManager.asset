@@ -43,6 +43,7 @@ TagManager:
   - TradeCard
   - DiscardCard
   - ClaimVictoryButton
+  - MonopolyCard
   layers:
   - Default
   - TransparentFX

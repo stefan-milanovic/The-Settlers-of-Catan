@@ -141,8 +141,18 @@ public class ShopController : MonoBehaviour
 
         if (inventory.CanPlayDevelopmentCard(unitCode))
         {
-            popupText.text = "<color=green>Are you sure you want to play this Development card?</color>";
-            confirmButton.interactable = true;
+            // If the player has already played a development card this turn, prevent him from playing another.
+            if (inventory.HasPlayedDevelopmentCardThisTurn())
+            {
+                popupText.text = "<color=red>You may only play one Development card per turn.</color>";
+                confirmButton.interactable = false;
+            }
+            else
+            {
+                popupText.text = "<color=green>Are you sure you want to play this Development card?</color>";
+                confirmButton.interactable = true;
+            }
+            
 
         }
         else

@@ -46,7 +46,7 @@ public class TradeController : MonoBehaviour
 
     private readonly Color confirmationColour = new Color(0.4745098f, 0.8431373f, 0.1568628f);
 
-    private bool trading = false;
+    
 
     private bool recepientResponded;
     private bool tradeDeclined;
@@ -58,8 +58,9 @@ public class TradeController : MonoBehaviour
     private int senderId;
     private int recepientId;
 
-    private bool supplyTrading;
-    private bool yearOfPlenty;
+    private bool trading = false;
+    private bool supplyTrading = false;
+    private bool yearOfPlenty = false;
 
     private const int SUPPLY_ID = -1;
 
@@ -118,6 +119,7 @@ public class TradeController : MonoBehaviour
 
     public bool IsTrading() { return trading; }
 
+    public bool IsYearOfPlenty() { return yearOfPlenty; }
 
     #region Sender Methods (This player is the trade request sender)
 
@@ -128,8 +130,10 @@ public class TradeController : MonoBehaviour
         this.recepientId = recepient.ActorNumber;
 
         this.amRecepient = false;
+
+        this.trading = false;
         this.supplyTrading = false;
-        
+        this.yearOfPlenty = false;
 
         int[] tradeRequestMessage = new int[2];
         tradeRequestMessage[0] = (int)GamePlayer.MessageCode.TRADE_REQUEST;
@@ -251,6 +255,7 @@ public class TradeController : MonoBehaviour
 
         this.amRecepient = true;
         this.supplyTrading = false;
+        this.yearOfPlenty = false;
         
         StartCoroutine(TradeOfferTick());
 
@@ -323,6 +328,8 @@ public class TradeController : MonoBehaviour
 
         trading = true;
         supplyTrading = true;
+        yearOfPlenty = false;
+
         this.AvailableCards = 0;
 
         this.senderId = PhotonNetwork.LocalPlayer.ActorNumber;
@@ -442,6 +449,67 @@ public class TradeController : MonoBehaviour
 
     public void YearOfPlentyInit()
     {
+        offersPanel.SetActive(true);
+
+        confirmed = false;
+        foreach (GameObject panel in localPanels)
+        {
+            panel.GetComponent<Image>().color = new Color(1f, 1f, 1f);
+        }
+        LockRemotePanel();
+
+
+        clearRemoteButton.SetActive(true);
+
+        trading = true;
+        supplyTrading = false;
+        yearOfPlenty = true;
+
+        // Set available cards instantly.
+        this.AvailableCards = 2;
+
+        this.senderId = PhotonNetwork.LocalPlayer.ActorNumber;
+        this.recepientId = SUPPLY_ID;
+
+        // Set up player and supply name.
+        localPlayerText.text = ColourUtility.GetPlayerDisplayNameFromId(senderId) + "'s offer";
+        remotePlayerText.text = "Available cards: 2";
+
+        // Set up cards. Left ones are local, right ones are remote.
+
+        foreach (Card card in localCards)
+        {
+            card.Init();
+            card.SetVisible(false); // Local cards here cannot be clicked.
+            card.SetInventory(inventory);
+            card.UpdateCard(0);
+        }
+
+        foreach (Card card in remoteCards)
+        {
+            card.Init();
+            card.SetVisible(true);
+            card.SetInventory(inventory);
+            card.UpdateCard(0);
+
+            // Specifically for year of plenty  and supply trading.
+            card.SetEnabled(true);
+        }
+
+        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.YEAR_OF_PLENTY_INITIATED, PhotonNetwork.LocalPlayer);
+    }
+
+    public void YearOfPlentyCardChosen(Inventory.UnitCode unitCode, int amount)
+    {
+        // Always adds to the selected cards. Use the Clear button in the top right hand corner to clear the remote cards.
+
+        if (AvailableCards > 0)
+        {
+            int oldAmount = remoteCards[(int)unitCode].getAmount();
+            remoteCards[(int)unitCode].UpdateCard(oldAmount + amount);
+
+            AvailableCards -= amount;
+        }
 
     }
 
@@ -481,6 +549,7 @@ public class TradeController : MonoBehaviour
 
         trading = true;
         supplyTrading = false;
+        yearOfPlenty = false;
         clearRemoteButton.SetActive(false);
 
         // Set up player names.
@@ -575,17 +644,24 @@ public class TradeController : MonoBehaviour
     {
         // Notify the other player that the trade has been cancelled. Cancel it locally.
 
-        int[] tradeCancelledMessage = new int[2];
-        tradeCancelledMessage[0] = (int)GamePlayer.MessageCode.TRADE_CANCELLED;
-        tradeCancelledMessage[1] = (amRecepient) ? senderId : recepientId; // Who should read the message?
+        if (!supplyTrading && !yearOfPlenty)
+        {
+            int[] tradeCancelledMessage = new int[2];
+            tradeCancelledMessage[0] = (int)GamePlayer.MessageCode.TRADE_CANCELLED;
+            tradeCancelledMessage[1] = (amRecepient) ? senderId : recepientId; // Who should read the message?
 
-        GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(tradeCancelledMessage, false);
+            GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(tradeCancelledMessage, false);
 
-        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_CANCELLED, PhotonNetwork.LocalPlayer);
-
+            
+        }
+        
         // Cancel trade locally.
-
-        CancelTrade();
+        if (!yearOfPlenty)
+        {
+            GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_CANCELLED, PhotonNetwork.LocalPlayer);
+            CancelTrade();
+        }
+        
     }
 
     public void TradeOfferConfirmationButtonPress()
@@ -616,7 +692,7 @@ public class TradeController : MonoBehaviour
     public void ClearButtonClicked()
     {
         // Reset remote cards.
-        if (supplyTrading)
+        if (supplyTrading || yearOfPlenty)
         {
             foreach (Card remoteCard in remoteCards)
             {
@@ -699,6 +775,7 @@ public class TradeController : MonoBehaviour
         }
 
     }
+
     #endregion 
 
     #region Offers Callbacks
@@ -746,6 +823,7 @@ public class TradeController : MonoBehaviour
 
         trading = false;
         supplyTrading = false;
+        yearOfPlenty = false;
 
         // Return resources from the local cards to the stock.
 
@@ -763,7 +841,7 @@ public class TradeController : MonoBehaviour
         
         // If the player is trading with the supply, process trade locally. 
 
-        if (!supplyTrading)
+        if (!supplyTrading && !yearOfPlenty)
         {
             // The local player now receives the resources from the Remote cards slots. Inform the other player to do the same.
             int[] tradeExecuteMessage = new int[2];
@@ -775,13 +853,20 @@ public class TradeController : MonoBehaviour
             GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_PLAYERS_COMPLETED, PhotonNetwork.CurrentRoom.GetPlayer(senderId), recepientId);
             
             
-
             PerformResourceExchange();
         } else
         {
             if (AvailableCards == 0)
             {
-                GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_SUPPLY_COMPLETED, PhotonNetwork.LocalPlayer);
+                if (supplyTrading)
+                {
+                    GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.TRADE_SUPPLY_COMPLETED, PhotonNetwork.LocalPlayer);
+                }
+                else
+                {
+                    GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.YEAR_OF_PLENTY_COMPLETED, PhotonNetwork.LocalPlayer);
+                }
+                
                 PerformResourceExchange();
             }
             else
@@ -861,6 +946,7 @@ public class TradeController : MonoBehaviour
 
         trading = false;
         supplyTrading = false;
+        yearOfPlenty = false;
 
         foreach(Card remoteCard in remoteCards)
         {
@@ -875,6 +961,8 @@ public class TradeController : MonoBehaviour
     {
 
         trading = false;
+        supplyTrading = false;
+        yearOfPlenty = false;
 
         offersPanel.SetActive(false);
         tradeRequestStatusPanel.SetActive(true);
@@ -884,5 +972,7 @@ public class TradeController : MonoBehaviour
         yield return new WaitForSeconds(3);
 
         tradeRequestStatusPanel.SetActive(false);
+
+        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
     }
 }

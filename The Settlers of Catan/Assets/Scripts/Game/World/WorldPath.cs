@@ -14,6 +14,10 @@ public class WorldPath : MonoBehaviour
 
     private int ownerId;
 
+
+    // Used for calculating the player's longest road.
+    private int roadChainIndex;
+
     private GameObject road;
     private GameObject emissionObject;
 

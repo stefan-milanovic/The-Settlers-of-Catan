@@ -34,14 +34,12 @@ public class DevelopmentCardDeck : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        photonView = GetComponent<PhotonView>();
     }
 
     public void Init()
     {
-
-        photonView = GetComponent<PhotonView>();
-
+        
         // Shuffle the deck.
         ShuffleDeck();
     }
