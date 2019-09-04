@@ -237,6 +237,7 @@ public class DiscardController : MonoBehaviour
     // A monopoly card was selected. Steal this resource from all the other players.
     public void MonopolyCardClicked(Inventory.UnitCode unitCode)
     {
+        
         monopolyPanel.SetActive(false);
 
         this.monopolyResource = unitCode;
@@ -256,7 +257,8 @@ public class DiscardController : MonoBehaviour
         // Give the received resources to the player.
         inventory.GiveToPlayer(this.monopolyResource, amount);
 
-        if (++monopolyReplies == 1)
+        monopolyReplies++;
+        if (monopolyReplies == 3)
         {
             // All players have replied. The Monopoly card effect is complete.
 

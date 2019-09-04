@@ -108,7 +108,6 @@ public class Dice : MonoBehaviour
 
     private void RollAgain()
     {
-        Debug.Log("roll again called");
 
         Reset();
 
@@ -130,6 +129,11 @@ public class Dice : MonoBehaviour
                 
                 diceController.DiceFallen(diceValue = diceSide.GetSideValue());
             }
+        }
+
+        if (diceValue == 0)
+        {
+            RollAgain();
         }
     }
 

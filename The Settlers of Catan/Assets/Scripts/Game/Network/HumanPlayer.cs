@@ -38,27 +38,6 @@ public class HumanPlayer : GamePlayer
             {
                 PhotonNetwork.Instantiate(Path.Combine("Prefabs/Network", "BoardGenerator"), Vector3.zero, Quaternion.identity);
             }
-
-            // Get preferred colour and username.
-            this.username = PlayerPrefs.GetString("Username");
-            this.colourHex = PlayerPrefs.GetString("Colour");
-
-            // delete when color is implemented
-            if (colourHex == "")
-            {
-                Color myColor = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
-
-                string hex = "#" + ColorUtility.ToHtmlStringRGB(myColor);
-                
-                colourHex = hex;
-            }
-
-            // set them room-wide
-            PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
-            {
-                ["username"] = this.username,
-                ["colour"] = this.colourHex
-            });
             
             // Connect to Turn Manager - ONLY LOCAL PLAYER CALLS THIS.
             ConnectToTurnManager();
@@ -82,11 +61,49 @@ public class HumanPlayer : GamePlayer
                 {
                     string key = "leaderboardSlot" + (i + 1);
 
+                    string keyColour = "colour" + (i + 1) + "Owner";
+
                     if (propertiesThatChanged.ContainsKey(key) && (int)propertiesThatChanged[key] != 0)
                     {
-
                         GameObject.Find("LeaderboardController").GetComponent<LeaderboardController>().TakeSlot(i, (int)propertiesThatChanged[key]);
+                    }
+                    else if (propertiesThatChanged.ContainsKey(keyColour) && (int)propertiesThatChanged[keyColour] != 0)
+                    {
+                        // Set the player's colour.
+                        string colourHex = "#FFFFFF";
 
+                        switch (i)
+                        {
+                            case 0:
+                                colourHex = "#00FF00";
+                                break;
+                            case 1:
+                                colourHex = "#FF0000";
+                                break;
+                            case 2:
+                                colourHex = "#1F00FF";
+                                break;
+                            case 3:
+                                colourHex = "#00EDFF";
+                                break;
+                        }
+
+                        if (PhotonNetwork.LocalPlayer == PhotonNetwork.PlayerList[i])
+                        {
+
+                            PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
+                            {
+                                ["username"] = PlayerPrefs.GetString("Username"),
+                                ["colour"] = colourHex
+                            });
+
+                            eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+
+                            myTurn = true;
+                            audioSource.Play();
+                        }
+                        
+                        
                     }
                 }
             }
@@ -128,6 +145,7 @@ public class HumanPlayer : GamePlayer
             if (gameOver) { return; }
 
             // It is my turn to play.
+            
 
             if (setUpPhase)
             {
@@ -285,9 +303,11 @@ public class HumanPlayer : GamePlayer
 
                             p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
 
-                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+                            
 
-                            myPaths.Add(p);
+                            myRoads.Add(p);
+
+                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
 
                             EndLocalTurn();
                         } else if (currentTurn == 2)
@@ -295,9 +315,11 @@ public class HumanPlayer : GamePlayer
 
                             p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
 
-                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
+                            
 
-                            myPaths.Add(p);
+                            myRoads.Add(p);
+
+                            inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
 
                             EndLocalTurn();
                             
@@ -310,10 +332,10 @@ public class HumanPlayer : GamePlayer
                                 // Free road placement.
                                 
                                 p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
+                                
+                                myRoads.Add(p);
 
                                 inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
-
-                                myPaths.Add(p);
 
                                 freeRoadsPlaced++;
                                 // If second one is placed, put up event text.
@@ -333,6 +355,8 @@ public class HumanPlayer : GamePlayer
 
                                 p.ConstructRoad(PhotonNetwork.LocalPlayer.ActorNumber);
 
+                                myRoads.Add(p);
+
                                 inventory.TakeFromPlayer(Inventory.UnitCode.ROAD, 1);
 
                                 // Inform event text.
@@ -342,7 +366,7 @@ public class HumanPlayer : GamePlayer
                                 eventTextController.SendEvent(EventTextController.EventCode.PLAYER_IDLE, PhotonNetwork.LocalPlayer);
                                 currentPhase = Phase.TRADE_BUILD_IDLE;
 
-                                myPaths.Add(p);
+                                
                             }
                             
                         }

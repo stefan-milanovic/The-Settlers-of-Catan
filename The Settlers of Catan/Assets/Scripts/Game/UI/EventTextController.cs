@@ -199,7 +199,7 @@ public class EventTextController : MonoBehaviour
         {
             case EventCode.FIRST_TURN_PHASE_ONE:
                 
-                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + "</color>" + " is placing their first settlement.";
+                return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their first settlement.";
                 
             case EventCode.FIRST_TURN_PHASE_TWO:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " is placing their first road.";

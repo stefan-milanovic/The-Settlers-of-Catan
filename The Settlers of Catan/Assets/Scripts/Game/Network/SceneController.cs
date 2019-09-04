@@ -37,7 +37,11 @@ public class SceneController : MonoBehaviourPunCallbacks
                 ["leaderboardSlot1"] = 0,
                 ["leaderboardSlot2"] = 0,
                 ["leaderboardSlot3"] = 0,
-                ["leaderboardSlot4"] = 0
+                ["leaderboardSlot4"] = 0,
+                ["colour1Owner"] = 0,
+                ["colour2Owner"] = 0,
+                ["colour3Owner"] = 0,
+                ["colour4Owner"] = 0
             }
            );
             
@@ -58,7 +62,7 @@ public class SceneController : MonoBehaviourPunCallbacks
     public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
     {
         Debug.Log("test" + propertiesThatChanged);
-        if (propertiesThatChanged.Count == 4)
+        if (propertiesThatChanged.Count == 8)
         {
             bool leaderboardInit = true;
             for (int i = 0; i < 4; i++)

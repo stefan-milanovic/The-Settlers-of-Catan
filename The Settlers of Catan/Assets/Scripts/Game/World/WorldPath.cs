@@ -12,11 +12,12 @@ public class WorldPath : MonoBehaviour
     private bool available = true;
     private bool blinkActive = false;
 
-    private int ownerId;
+    private int ownerId = -1;
+    public int OwnerId {
+        get { return ownerId; }
+    }
 
-
-    // Used for calculating the player's longest road.
-    private int roadChainIndex;
+    public int RoadChainIndex { get; set; }
 
     private GameObject road;
     private GameObject emissionObject;
@@ -38,7 +39,9 @@ public class WorldPath : MonoBehaviour
         photonView = GetComponent<PhotonView>();
         road = gameObject.transform.GetChild(ROAD_CHILD_ID).gameObject;
         emissionObject = gameObject.transform.GetChild(BLINK_CHILD_ID).gameObject;
+        RoadChainIndex = 0;
     }
+
     // Update is called once per frame
     void Update()
     {

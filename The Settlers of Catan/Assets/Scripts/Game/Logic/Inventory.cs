@@ -32,7 +32,7 @@ public class Inventory : MonoBehaviour
     
     private int[] stock =
     {
-        10, 10, 10, 10, 10,
+        0, 0, 0, 0, 0,
         0, 0, 0, 0, 0,
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };
@@ -518,9 +518,44 @@ public class Inventory : MonoBehaviour
 
     private void CalculatePlayerRoadLength()
     {
-        // Check local.
 
-        // Check if chained to another road chain of the player.
+        //// TODO: Creating a settlement on an open intersection can break a longest road.
+
+        //// Find the last added road.
+        //WorldPath lastRoad = myPlayer.GetLastAddedRoad();
+
+
+        //// 0 -- left side, 1 -- right side
+        //bool[] connectedOnSide = { false, false };
+
+        //// Check both sides.
+
+        //Intersection[] intersections = lastRoad.GetIntersections();
+        //for (int i = 0; i < intersections.Length; i++)
+        //{
+        //    Intersection intersection = intersections[i];
+
+        //    WorldPath[] paths = intersection.GetSurroundingPaths();
+
+        //    int pathIndex = -1;
+        //    foreach (WorldPath path in paths)
+        //    {
+        //        if (path == lastRoad) { continue; }
+
+        //        // If one of the paths belongs to me, remember its path index. If both paths belong to me, remember the path with the higher index.
+        //        if (path.OwnerId == PhotonNetwork.LocalPlayer.ActorNumber)
+        //        {
+        //            if (path.RoadChainIndex > pathIndex)
+        //            {
+        //                pathIndex = path.RoadChainIndex;
+        //                connectedOnSide[i] = true;
+        //            }
+        //        }
+        //    }
+        //}
+
+
+        // LIST OF LISTS IDEA
     }
 
     private void LargestArmyCheck()

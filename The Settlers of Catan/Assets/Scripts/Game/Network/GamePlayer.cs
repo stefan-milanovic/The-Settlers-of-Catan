@@ -59,10 +59,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     protected EventTextController eventTextController;
 
     protected bool setUpPhase = true;
-
-    protected string username;
-    protected string colourHex;
-
+    
     protected bool myTurn = false;
     protected bool gameOver = false;
 
@@ -91,8 +88,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     protected bool busy = false;
 
     protected List<Intersection> myIntersections = new List<Intersection>();
-    protected List<WorldPath> myPaths = new List<WorldPath>();
-
+    protected List<WorldPath> myRoads = new List<WorldPath>();
+    
     protected Player currentPlayer = null;
 
     protected Card selectedConstructionCard = null;
@@ -138,6 +135,11 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     }
 
     public bool IsMyTurn() { return myTurn; }
+
+    public WorldPath GetLastAddedRoad()
+    {
+        return myRoads[myRoads.Count - 1];
+    }
 
     public override void OnEnable()
     {
@@ -189,6 +191,28 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         return inventory;
     }
 
+    private void ClaimColour()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            string key = "colour" + (i + 1) + "Owner";
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable
+            {
+                [key] = PhotonNetwork.LocalPlayer.ActorNumber
+            },
+            new ExitGames.Client.Photon.Hashtable
+            {
+                [key] = 0
+            });
+
+            if ((int)PhotonNetwork.CurrentRoom.CustomProperties[key] == 0)
+            {
+                // This colour will be taken -- leave the loop.
+                break;
+            }
+        }
+    }
 
     #region IPunTurnManagerCallbacks
 
@@ -208,18 +232,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
 
-                
-
-                // Init trade.
-                tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
-                tradeController.Init(inventory);
-                
-                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
+                // Claim colour slot.
+                ClaimColour();
 
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
-
-                myTurn = true;
-                audioSource.Play();
+                
+                // Turns starts once a colour slot is claimed.
             }
         }
         else if (turn == 2)
@@ -229,6 +247,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
+                // Init trade.
+                tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
+                tradeController.Init(inventory);
+
                 Debug.Log("In turn2 the player to play is: " + PhotonNetwork.LocalPlayer.ActorNumber + ", name = " + PhotonNetwork.LocalPlayer.NickName);
                 myTurn = true;
                 audioSource.Play();
@@ -610,18 +632,19 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             if (turn == 1)
             {
-                // Init trade.
-                tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
-                tradeController.Init(inventory);
+                ClaimColour();
                 
-                eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
                 setUpPhase = true;
-                myTurn = true;
-                audioSource.Play();
+
+                // Turns starts once a colour slot is claimed.
             }
             else if (turn == 2)
             {
+                // Init trade.
+                tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
+                tradeController.Init(inventory);
+
                 myTurn = true;
                 audioSource.Play();
                 eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
@@ -629,6 +652,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             }
             else if (turn == 3)
             {
+                
                 setUpPhase = false;
                 currentPhase = Phase.ROLL_DICE;
                 myTurn = true;
@@ -660,6 +684,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     protected void FindSelectableIntersections()
     {
+
         if (busy) return;
 
         busy = true;
@@ -696,7 +721,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         {
             // Locate reachable, available intersections. Avoid duplicates.
             
-            foreach (WorldPath road in myPaths)
+            foreach (WorldPath road in myRoads)
             {
                 foreach (Intersection i in road.GetIntersections())
                 {
@@ -765,7 +790,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             // 2) Paths connected to the player's roads. Avoid duplicates.
 
-            foreach (WorldPath road in myPaths)
+            foreach (WorldPath road in myRoads)
             {
                 List<WorldPath> connectedPaths = road.GetAvailablePaths();
 

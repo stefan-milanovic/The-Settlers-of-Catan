@@ -86,6 +86,9 @@ public class Intersection : MonoBehaviour
         }
     }
 
+    public WorldPath[] GetSurroundingPaths() { return surroundingPaths; }
+
+
     // Update is called once per frame
     void Update()
     {
@@ -199,7 +202,7 @@ public class Intersection : MonoBehaviour
 
         return list;
     }
-
+    
     private void ShowShortFlag()
     {
 
@@ -233,7 +236,7 @@ public class Intersection : MonoBehaviour
         int position = GamePlayer.FindPosition(ownerId) + 1;
 
         string materialPath = "Materials/PlayerMaterials/Player" + position + "Material";
-        ColorUtility.TryParseHtmlString(PhotonNetwork.LocalPlayer.CustomProperties["colour"] as string, out Color playerColour);
+        ColorUtility.TryParseHtmlString(PhotonNetwork.CurrentRoom.GetPlayer(ownerId).CustomProperties["colour"] as string, out Color playerColour);
 
         longFlag.GetComponent<SkinnedMeshRenderer>().material = Resources.Load(materialPath) as Material;
         longFlag.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", playerColour);
