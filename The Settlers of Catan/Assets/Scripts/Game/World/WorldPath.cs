@@ -17,8 +17,6 @@ public class WorldPath : MonoBehaviour
         get { return ownerId; }
     }
 
-    public int RoadChainIndex { get; set; }
-
     private GameObject road;
     private GameObject emissionObject;
 
@@ -39,7 +37,8 @@ public class WorldPath : MonoBehaviour
         photonView = GetComponent<PhotonView>();
         road = gameObject.transform.GetChild(ROAD_CHILD_ID).gameObject;
         emissionObject = gameObject.transform.GetChild(BLINK_CHILD_ID).gameObject;
-        RoadChainIndex = 0;
+
+        GameObject.Find("BoardGraph").GetComponent<Graph>().CreateGraphNode(this);
     }
 
     // Update is called once per frame
@@ -50,7 +49,7 @@ public class WorldPath : MonoBehaviour
 
     public Intersection[] GetIntersections() { return intersections; }
 
-    // We return all paths connected to this path that are available. We do not count the 
+    // We return all paths connected to this path that are available. We do not count this road (as it isn't Available).
     public List<WorldPath> GetAvailablePaths()
     {
         List<WorldPath> list = new List<WorldPath>();
@@ -59,6 +58,16 @@ public class WorldPath : MonoBehaviour
             list.AddRange(i.GetAvailablePaths());
         }
 
+        return list;
+    }
+
+    public List<WorldPath> GetNeighbouringPaths()
+    {
+        List<WorldPath> list = new List<WorldPath>();
+        foreach (Intersection i in intersections)
+        {
+            list.AddRange(i.GetSurroundingPathsExcept(this));
+        }
         return list;
     }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,6 +34,12 @@ public class BottomPanel : MonoBehaviour
     [SerializeField]
     private GameObject developmentBuyPanel;
 
+    [SerializeField]
+    private GameObject chatPanel;
+
+    [SerializeField]
+    private TextMeshProUGUI chatToggleText;
+
 
     // Start is called before the first frame update
     void Start()
@@ -65,6 +72,19 @@ public class BottomPanel : MonoBehaviour
     public void OpenSpecialTab()
     {
         TogglePanel(PanelCode.SPECIAL);
+    }
+
+    public void ToggleChatVisibility()
+    {
+        if (chatPanel.activeSelf)
+        {
+            chatToggleText.text = "Maximise Chat";
+            chatPanel.SetActive(false);
+        }
+        else {
+            chatToggleText.text = "Minimise Chat";
+            chatPanel.SetActive(true);
+        }
     }
 
     public void OpenTradeTab()

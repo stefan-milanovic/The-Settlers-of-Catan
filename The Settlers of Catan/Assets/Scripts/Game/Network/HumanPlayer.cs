@@ -146,6 +146,7 @@ public class HumanPlayer : GamePlayer
 
             // It is my turn to play.
             
+            
 
             if (setUpPhase)
             {

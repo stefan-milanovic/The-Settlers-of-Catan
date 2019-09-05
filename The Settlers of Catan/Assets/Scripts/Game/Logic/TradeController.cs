@@ -62,6 +62,8 @@ public class TradeController : MonoBehaviour
 
     private const int SUPPLY_ID = -1;
 
+    private bool shouldSendAllOutGoingCommands = false;
+
     [SerializeField]
     private GameObject clearRemoteButton;
 
@@ -88,6 +90,15 @@ public class TradeController : MonoBehaviour
     void Update()
     {
 
+    }
+
+    private void LateUpdate()
+    {
+        if (shouldSendAllOutGoingCommands)
+        {
+            shouldSendAllOutGoingCommands = false;
+            PhotonNetwork.SendAllOutgoingCommands();
+        }
     }
 
     public void Init(Inventory inventory)
@@ -260,12 +271,12 @@ public class TradeController : MonoBehaviour
         this.supplyTrading = false;
         this.yearOfPlenty = false;
 
-        StartCoroutine(TradeOfferTick());
+        StartCoroutine(ReceiverOfferTick());
 
     }
 
     // This is run on the recepient of the trade request.
-    private IEnumerator TradeOfferTick()
+    private IEnumerator ReceiverOfferTick()
     {
         recepientResponded = false;
         tradeRequestPopupPanel.SetActive(true);
@@ -293,7 +304,7 @@ public class TradeController : MonoBehaviour
             }
             else
             {
-                yield return new WaitForSeconds(1);
+                //yield return new WaitForSeconds(1);
                 tradeRequestPopupPanel.SetActive(false);
                 InitOffersPanel();
                 yield break;
@@ -610,6 +621,8 @@ public class TradeController : MonoBehaviour
         tradeAcceptedMessage[1] = senderId;
 
         GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(tradeAcceptedMessage, false);
+
+        shouldSendAllOutGoingCommands = true;
 
         // Halt countdown and open offers panel yourself.
         AcceptTradeOffer();

@@ -89,7 +89,15 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     protected List<Intersection> myIntersections = new List<Intersection>();
     protected List<WorldPath> myRoads = new List<WorldPath>();
+
+
     
+    //protected List<RoadChainLink> roadNetwork = new List<RoadChainLink>();
+    
+    //public List<RoadChainLink> RoadNetwork {
+    //    get { return roadNetwork; }
+    //}
+
     protected Player currentPlayer = null;
 
     protected Card selectedConstructionCard = null;
@@ -758,6 +766,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             eventTextController.SendEvent(EventTextController.EventCode.SECOND_TURN_PHASE_TWO, PhotonNetwork.LocalPlayer);
         }
 
+
         selectablePaths = new List<WorldPath>();
 
         if (currentTurn < 3)
@@ -769,7 +778,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
                 foreach (var path in availablePaths)
                 {
-                    if ((currentTurn == 1 && i == myIntersections[0]) || (currentTurn == 2 && i == myIntersections[1]) || currentTurn >= 3)
+                    if ((currentTurn == 1 && i == myIntersections[0]) || (currentTurn == 2 && i == myIntersections[1]))
                     {
                         selectablePaths.Add(path);
                         path.ToggleBlink();
@@ -781,6 +790,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         else
         {
 
+            
+
             // 1) Paths adjacent to the player's settlements that are available.
 
             foreach (Intersection i in myIntersections)
@@ -788,19 +799,37 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 selectablePaths.AddRange(i.GetAvailablePaths());
             }
 
-            // 2) Paths connected to the player's roads. Avoid duplicates.
+            // 2) Paths connected to the player's roads that do NOT cross an opponent's settement. Avoid duplicates.
 
             foreach (WorldPath road in myRoads)
             {
-                List<WorldPath> connectedPaths = road.GetAvailablePaths();
+                bool invalid = false;
 
-                foreach (WorldPath p in connectedPaths)
+                Intersection[] roadIntersections = road.GetIntersections();
+
+                foreach (Intersection i in roadIntersections)
                 {
-                    if (!selectablePaths.Contains(p))
+                    if (i.GetOwnerId() != 0 && i.GetOwnerId() != PhotonNetwork.LocalPlayer.ActorNumber)
                     {
-                        selectablePaths.Add(p);
+                        // We cannot construct roads through other players' settlements.
+                        invalid = true;
+                        break;
                     }
                 }
+
+                if (!invalid)
+                {
+                    List<WorldPath> connectedPaths = road.GetAvailablePaths(); // returns 6 results
+
+                    foreach (WorldPath p in connectedPaths)
+                    {
+                        if (!selectablePaths.Contains(p))
+                        {
+                            selectablePaths.Add(p);
+                        }
+                    }
+                }
+                
             }
 
             // Toggle blinks for the player.

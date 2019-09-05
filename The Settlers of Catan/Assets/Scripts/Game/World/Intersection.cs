@@ -88,6 +88,18 @@ public class Intersection : MonoBehaviour
 
     public WorldPath[] GetSurroundingPaths() { return surroundingPaths; }
 
+    public List<WorldPath> GetSurroundingPathsExcept(WorldPath pathToIgnore)
+    {
+        List<WorldPath> result = new List<WorldPath>();
+        foreach (WorldPath path in surroundingPaths)
+        {
+            if (path != pathToIgnore)
+            {
+                result.Add(path);
+            }
+        }
+        return result;
+    }
 
     // Update is called once per frame
     void Update()

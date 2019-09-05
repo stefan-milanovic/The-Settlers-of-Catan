@@ -32,7 +32,7 @@ public class Inventory : MonoBehaviour
     
     private int[] stock =
     {
-        0, 0, 0, 0, 0,
+        40, 40, 40, 40, 40,
         0, 0, 0, 0, 0,
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };
@@ -48,7 +48,7 @@ public class Inventory : MonoBehaviour
 
     private int knightCardsPlayed = 0;
     private int roadLength = 0;
-
+    
     private int settlementsOnBoard = 0;
     private int citiesOnBoard = 0;
 
@@ -516,46 +516,26 @@ public class Inventory : MonoBehaviour
         GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(monopolyReplyMessage, false);
     }
 
+
+    private enum RoadAction {
+        SIMPLE_ROAD,
+        FORK,
+        MERGE,
+        FORK_INTO_MERGE,
+        COMPLEX_MERGE
+    }
+
     private void CalculatePlayerRoadLength()
     {
+        // Call the graph method to calculate the length.
+        
+        int lengthWithAddition = GameObject.Find("BoardGraph").GetComponent<Graph>().CalculatePlayerRoadLength(PhotonNetwork.LocalPlayer.ActorNumber);
+        if (roadLength < lengthWithAddition)
+        {
+            roadLength = lengthWithAddition;
+        }
 
-        //// TODO: Creating a settlement on an open intersection can break a longest road.
-
-        //// Find the last added road.
-        //WorldPath lastRoad = myPlayer.GetLastAddedRoad();
-
-
-        //// 0 -- left side, 1 -- right side
-        //bool[] connectedOnSide = { false, false };
-
-        //// Check both sides.
-
-        //Intersection[] intersections = lastRoad.GetIntersections();
-        //for (int i = 0; i < intersections.Length; i++)
-        //{
-        //    Intersection intersection = intersections[i];
-
-        //    WorldPath[] paths = intersection.GetSurroundingPaths();
-
-        //    int pathIndex = -1;
-        //    foreach (WorldPath path in paths)
-        //    {
-        //        if (path == lastRoad) { continue; }
-
-        //        // If one of the paths belongs to me, remember its path index. If both paths belong to me, remember the path with the higher index.
-        //        if (path.OwnerId == PhotonNetwork.LocalPlayer.ActorNumber)
-        //        {
-        //            if (path.RoadChainIndex > pathIndex)
-        //            {
-        //                pathIndex = path.RoadChainIndex;
-        //                connectedOnSide[i] = true;
-        //            }
-        //        }
-        //    }
-        //}
-
-
-        // LIST OF LISTS IDEA
+        Debug.Log("ROAD LENGTH: " + roadLength);
     }
 
     private void LargestArmyCheck()
@@ -573,18 +553,19 @@ public class Inventory : MonoBehaviour
             if (largestArmyOwnerId == -1)
             {
                 GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LARGEST_ARMY_TAKE_FIRST_TIME, PhotonNetwork.LocalPlayer);
+                GiveToPlayer(UnitCode.LARGEST_ARMY, 1);
+                AddVictoryPoint(UnitCode.LARGEST_ARMY);
             }
-            else
+            else if (largestArmyOwnerId != PhotonNetwork.LocalPlayer.ActorNumber)
             {
                 GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LARGEST_ARMY_STEAL, PhotonNetwork.LocalPlayer, largestArmyOwnerId);
+                GiveToPlayer(UnitCode.LARGEST_ARMY, 1);
+                AddVictoryPoint(UnitCode.LARGEST_ARMY);
             }
 
             largestArmyKnightCount = knightCardsPlayed;
             largestArmyOwnerId = PhotonNetwork.LocalPlayer.ActorNumber;
-
-            GiveToPlayer(UnitCode.LARGEST_ARMY, 1);
-            AddVictoryPoint(UnitCode.LARGEST_ARMY);
-
+            
             int[] largestArmyOvertakeMessage = new int[3];
 
             largestArmyOvertakeMessage[0] = (int)GamePlayer.MessageCode.LARGEST_ARMY_OVERTAKE; // Message code.
@@ -607,17 +588,20 @@ public class Inventory : MonoBehaviour
             if (longestRoadOwnerId == -1)
             {
                 GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LONGEST_ROAD_TAKE_FIRST_TIME, PhotonNetwork.LocalPlayer);
+                GiveToPlayer(UnitCode.LONGEST_ROAD, 1);
+                AddVictoryPoint(UnitCode.LONGEST_ROAD);
             }
-            else
+            else if (longestRoadOwnerId != PhotonNetwork.LocalPlayer.ActorNumber)
             {
                 GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LONGEST_ROAD_STEAL, PhotonNetwork.LocalPlayer, longestRoadOwnerId);
+                GiveToPlayer(UnitCode.LONGEST_ROAD, 1);
+                AddVictoryPoint(UnitCode.LONGEST_ROAD);
             }
 
             longestRoadLength = roadLength;
             longestRoadOwnerId = PhotonNetwork.LocalPlayer.ActorNumber;
 
-            GiveToPlayer(UnitCode.LONGEST_ROAD, 1);
-            AddVictoryPoint(UnitCode.LONGEST_ROAD);
+            
 
             int[] longestRoadOvertakeMessage = new int[3];
 
