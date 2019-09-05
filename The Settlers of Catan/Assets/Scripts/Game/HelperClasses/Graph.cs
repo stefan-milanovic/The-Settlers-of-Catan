@@ -69,7 +69,11 @@ public class Graph : MonoBehaviour
             {
                 if (node == startNode)
                 {
-                    int dfsLength = DFS(playerId, null, node, 0);
+                    Stack<GraphNode> trail = new Stack<GraphNode>();
+                    trail.Push(node);
+                    int dfsLength = DFS(playerId, null, node, 0, trail);
+
+                    trail.Pop();
                     if (dfsLength > length)
                     {
                         length = dfsLength;
@@ -89,10 +93,23 @@ public class Graph : MonoBehaviour
         }
     }
 
-    private int DFS(int playerId, GraphNode parent, GraphNode node, int parentLength)
+    private void ResetChildrenVisitedFlags(Stack<GraphNode> trail)
+    {
+        foreach (GraphNode node in nodes)
+        {
+            if (!trail.Contains(node))
+            {
+                node.Visited = false;
+            }
+        }
+    }
+
+    private int DFS(int playerId, GraphNode parent, GraphNode node, int parentLength, Stack<GraphNode> trail)
     {
         int length = parentLength + 1;
         node.Visited = true;
+
+        trail.Push(node);
 
         foreach (GraphNode neighbour in node.Neighbours)
         {
@@ -105,13 +122,18 @@ public class Graph : MonoBehaviour
                     continue;
                 }
 
-                int neighbourLength = DFS(playerId, node, neighbour, parentLength + 1);
+                // Reset children visited flags.
+                ResetChildrenVisitedFlags(trail);
+
+                int neighbourLength = DFS(playerId, node, neighbour, parentLength + 1, trail);
                 if (neighbourLength > length)
                 {
                     length = neighbourLength;
                 }
             }
         }
+
+        trail.Pop();
 
         return length;
     }
