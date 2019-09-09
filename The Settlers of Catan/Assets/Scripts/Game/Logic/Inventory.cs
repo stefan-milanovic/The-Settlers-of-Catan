@@ -164,10 +164,97 @@ public class Inventory : MonoBehaviour
         // Calculate his longest road, and take the Longest Road card if all the conditions are met.
         if (unit == UnitCode.ROAD)
         {
+
+            // Calculate local player length.
             CalculatePlayerRoadLength();
+
+            // If there is a current owner of this card, recalculate his road length.
+            if (longestRoadOwnerId != -1 && longestRoadOwnerId != PhotonNetwork.LocalPlayer.ActorNumber)
+            {
+                this.longestRoadLength = GameObject.Find("BoardGraph").GetComponent<Graph>().CalculatePlayerRoadLength(longestRoadOwnerId);
+            }
+            
             LongestRoadCheck();
         }
-        
+
+        // If the card is a settlement card, check if the settlement dismantles the current longest road.
+        if (unit == UnitCode.SETTLEMENT)
+        {
+            Debug.Log("longest road owner id = " + longestRoadOwnerId);
+            //Recalculate longest roads for every player.
+            if (longestRoadOwnerId != -1)
+            {
+
+                int[] roadLengths = new int[4];
+
+                for (int i = 0; i < 4; i++)
+                {
+                    if (i >= PhotonNetwork.PlayerList.Length)
+                    {
+                        continue;
+                    }
+
+                    roadLengths[i] = GameObject.Find("BoardGraph").GetComponent<Graph>().CalculatePlayerRoadLength(PhotonNetwork.PlayerList[i].ActorNumber);
+                }
+
+                // Find maximum.
+
+                int maxId = 0;
+                int maximumVal = roadLengths[0];
+                for (int i = 1; i < roadLengths.Length; i++)
+                {
+                    if (roadLengths[i] > maximumVal)
+                    {
+                        maxId = i;
+                        maximumVal = roadLengths[i];
+                    }
+                }
+
+                for (int i = 0; i < roadLengths.Length; i++)
+                {
+                    Debug.Log(roadLengths[i]);
+
+                }
+                // 2) If the maximumVal is lower than 5, then the Longest Road card goes back into the deck.
+
+                if (maximumVal < 5)
+                {
+                    //Return the card to the deck.
+                    GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LONGEST_ROAD_RETURNED, PhotonNetwork.LocalPlayer);
+
+                    int[] longestRoadReturnedMessage = new int[2];
+
+                    longestRoadReturnedMessage[0] = (int)GamePlayer.MessageCode.LONGEST_ROAD_RETURNED; // Message code.
+
+                    GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(longestRoadReturnedMessage, false);
+                }
+                else
+                {
+                    int newOwnerId = PhotonNetwork.PlayerList[maxId].ActorNumber;
+
+                    //3) If the newOwnerId is different from the current Largest Road owner id, transfer card to new owner.
+                    if (newOwnerId != longestRoadOwnerId)
+                    {
+                        //The new owner steals the card from the old owner.
+
+                        GameObject.Find("EventTextController").GetComponent<EventTextController>().SendEvent(EventTextController.EventCode.LONGEST_ROAD_STEAL, PhotonNetwork.CurrentRoom.GetPlayer(newOwnerId), longestRoadOwnerId);
+
+                        longestRoadLength = maximumVal;
+                        longestRoadOwnerId = newOwnerId;
+
+                        int[] longestRoadOvertakeMessage = new int[4];
+
+                        longestRoadOvertakeMessage[0] = (int)GamePlayer.MessageCode.LONGEST_ROAD_OVERTAKE; // Message code.
+                        longestRoadOvertakeMessage[1] = newOwnerId; // Who sent the message and who has the card.
+                        longestRoadOvertakeMessage[2] = maximumVal; // How many cards must the next player to contest for this card pass?
+                        longestRoadOvertakeMessage[3] = 0; // Sending from settlement overtake.
+
+                        GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(longestRoadOvertakeMessage, false);
+                    }
+                }
+            }
+        }
+
     }
 
     public void GiveToPlayer(UnitCode unit, int amount)
@@ -266,7 +353,7 @@ public class Inventory : MonoBehaviour
 
                 playerScore += 2;
                 hiddenPlayerScore += 2;
-
+                
                 break;
 
             case UnitCode.LONGEST_ROAD:
@@ -515,27 +602,15 @@ public class Inventory : MonoBehaviour
 
         GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(monopolyReplyMessage, false);
     }
-
-
-    private enum RoadAction {
-        SIMPLE_ROAD,
-        FORK,
-        MERGE,
-        FORK_INTO_MERGE,
-        COMPLEX_MERGE
-    }
-
+    
     private void CalculatePlayerRoadLength()
     {
         // Call the graph method to calculate the length.
+       
+        roadLength = GameObject.Find("BoardGraph").GetComponent<Graph>().CalculatePlayerRoadLength(PhotonNetwork.LocalPlayer.ActorNumber);
         
-        int lengthWithAddition = GameObject.Find("BoardGraph").GetComponent<Graph>().CalculatePlayerRoadLength(PhotonNetwork.LocalPlayer.ActorNumber);
-        if (roadLength < lengthWithAddition)
-        {
-            roadLength = lengthWithAddition;
-        }
-
-        Debug.Log("ROAD LENGTH: " + roadLength);
+        Debug.Log("Road length: " + roadLength);
+        
     }
 
     private void LargestArmyCheck()
@@ -578,7 +653,9 @@ public class Inventory : MonoBehaviour
 
     private void LongestRoadCheck()
     {
-        if (roadLength < 5)
+
+        // If the player already owns this card, return.
+        if (roadLength < 5 || longestRoadOwnerId == PhotonNetwork.LocalPlayer.ActorNumber)
         {
             return;
         }
@@ -600,14 +677,13 @@ public class Inventory : MonoBehaviour
 
             longestRoadLength = roadLength;
             longestRoadOwnerId = PhotonNetwork.LocalPlayer.ActorNumber;
-
             
-
-            int[] longestRoadOvertakeMessage = new int[3];
+            int[] longestRoadOvertakeMessage = new int[4];
 
             longestRoadOvertakeMessage[0] = (int)GamePlayer.MessageCode.LONGEST_ROAD_OVERTAKE; // Message code.
             longestRoadOvertakeMessage[1] = PhotonNetwork.LocalPlayer.ActorNumber; // Who sent the message and who has the card.
             longestRoadOvertakeMessage[2] = longestRoadLength; // What road length must be surpassed for the Longest Road card to be acquired?
+            longestRoadOvertakeMessage[3] = 1; // Caling from LongestRoadCheck().
 
             GameObject.Find("TurnManager").GetComponent<TurnManager>().SendMove(longestRoadOvertakeMessage, false);
         }

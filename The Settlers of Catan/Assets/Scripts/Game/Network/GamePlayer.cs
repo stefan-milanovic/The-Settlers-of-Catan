@@ -50,6 +50,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         MONOPOLY_REPLY,
         LARGEST_ARMY_OVERTAKE,
         LONGEST_ROAD_OVERTAKE,
+        LONGEST_ROAD_RETURNED,
         GAME_OVER
     }
 
@@ -299,11 +300,15 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
     public void EndLocalTurn()
     {
+        
         Debug.Log("Player id = " + PhotonNetwork.LocalPlayer.ActorNumber + " ending their turn.");
         myTurn = false;
 
         eventTextController.SendEvent(EventTextController.EventCode.END_TURN, PhotonNetwork.LocalPlayer);
         turnManager.SendMove(null, true);
+        
+        
+        
     }
 
 
@@ -575,7 +580,21 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 {
                     inventory.SetLongestRoadOwner(senderId, moveMessage[2]);
                 }
+                else
+                {
+                    if (moveMessage[3] == 0)
+                    {
+                        // Calling from the settlement overtake.
+                        inventory.GiveToPlayer(Inventory.UnitCode.LONGEST_ROAD, 1);
+                        inventory.AddVictoryPoint(Inventory.UnitCode.LONGEST_ROAD);
+                    }
+                    
+                }
 
+                break;
+            case MessageCode.LONGEST_ROAD_RETURNED:
+                inventory.SetLongestRoadOwner(-1, -1);
+                
                 break;
             case MessageCode.GAME_OVER:
 
@@ -984,8 +1003,13 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             bottomPanel.OpenTradeTab();
         }
 
-        DisableEndingTurn();
-        EndLocalTurn();
+        if (currentPhase == Phase.TRADE_BUILD_IDLE)
+        {
+            DisableEndingTurn();
+            EndLocalTurn();
+        }
+            
+        
     }
 
     #endregion

@@ -1,6 +1,7 @@
 ﻿using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Graph : MonoBehaviour
@@ -71,7 +72,7 @@ public class Graph : MonoBehaviour
                 {
                     Stack<GraphNode> trail = new Stack<GraphNode>();
                     trail.Push(node);
-                    int dfsLength = DFS(playerId, null, node, 0, trail);
+                    int dfsLength = DFS(playerId, null, node, 1, trail);
 
                     trail.Pop();
                     if (dfsLength > length)
@@ -106,7 +107,7 @@ public class Graph : MonoBehaviour
 
     private int DFS(int playerId, GraphNode parent, GraphNode node, int parentLength, Stack<GraphNode> trail)
     {
-        int length = parentLength + 1;
+        int length = parentLength;
         node.Visited = true;
 
         trail.Push(node);
@@ -115,6 +116,53 @@ public class Graph : MonoBehaviour
         {
             if (!neighbour.Visited && neighbour.Road.OwnerId == playerId)
             {
+
+                // If the intersection between me and the parent is occupied by another player, ignore this road.
+                //if (parent != null)
+                //{
+                //    Intersection foundIntersection = null;
+
+                //    foreach (Intersection nodeIntersection in node.Road.GetIntersections())
+                //    {
+                //        foreach (Intersection parentIntersection in parent.Road.GetIntersections())
+                //        {
+                //            if (nodeIntersection == parentIntersection)
+                //            {
+                //                foundIntersection = nodeIntersection;
+                //                break;
+                //            }
+                //        }
+                //    }
+                    
+                //    if (foundIntersection.GetOwnerId() != playerId && foundIntersection.GetOwnerId() != 0)
+                //    {
+                //        continue;
+                //    }
+                //}
+                //else
+                //{
+                    // Parent is null, but don't continue to neighbours if the mutual settlement is now occupied by another player.
+                    
+                    Intersection mutualIntersection = null;
+
+                    foreach (Intersection nodeIntersection in node.Road.GetIntersections())
+                    {
+                        foreach (Intersection neighbourIntersection in neighbour.Road.GetIntersections())
+                        {
+                            if (nodeIntersection == neighbourIntersection)
+                            {
+                                mutualIntersection = nodeIntersection;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (mutualIntersection.GetOwnerId() != playerId && mutualIntersection.GetOwnerId() != 0)
+                    {
+                        continue;
+                    }
+                //}
+                
 
                 // Also ignore neighbours coming from parent's side.
                 if (parent != null && parent.Neighbours.Contains(neighbour))

@@ -55,6 +55,7 @@ public class EventTextController : MonoBehaviour
         LONGEST_ROAD_TAKE_FIRST_TIME,
         LARGEST_ARMY_STEAL,
         LONGEST_ROAD_STEAL,
+        LONGEST_ROAD_RETURNED,
         END_TURN,
         GAME_OVER
     };
@@ -359,7 +360,8 @@ public class EventTextController : MonoBehaviour
             case EventCode.LONGEST_ROAD_STEAL:
                 stealPlayer = PhotonNetwork.CurrentRoom.GetPlayer((int)additionalParams[0]);
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has stolen the <color=black>Longest Road</color> card from " + ColourUtility.GetPlayerDisplayName(stealPlayer) + "!";
-
+            case EventCode.LONGEST_ROAD_RETURNED:
+                return "The <color=black>Longest Road</color> card no longer belongs to any player!";
             case EventCode.GAME_OVER:
                 return ColourUtility.GetPlayerDisplayNameFromId(actorNumber) + " has won the game! Press ESC to return to the main menu.";
             case EventCode.END_TURN:
