@@ -32,6 +32,8 @@ public class LobbyController : MonoBehaviourPunCallbacks
 
     private MainMenu mainMenu;
 
+    private bool firstTime = true;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -46,19 +48,26 @@ public class LobbyController : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        PhotonNetwork.AutomaticallySyncScene = true;
 
-        mainMenu.ActivateBottomButtons();
-        
-        if (PlayerPrefs.GetString("Username") != null)
+        if (firstTime)
         {
-            PlayerNameUpdate(PlayerPrefs.GetString("Username"));
+            firstTime = false;
+            PhotonNetwork.AutomaticallySyncScene = true;
+            
+            mainMenu.EnableBottomButtons();
+
+            if (PlayerPrefs.GetString("Username") != null)
+            {
+                PlayerNameUpdate(PlayerPrefs.GetString("Username"));
+            }
+            else
+            {
+                PlayerNameUpdate(START_NAME);
+                mainMenu.SetPlayerName(START_NAME);
+            }
         }
-        else
-        {
-            PlayerNameUpdate(START_NAME);
-        }
-        
+
+        PhotonNetwork.JoinLobby();
     }
 
 
@@ -66,6 +75,7 @@ public class LobbyController : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.NickName = newName;
         PlayerPrefs.SetString("Username", newName);
+
 
         // If the player is in a room, change room display name.
         if (PhotonNetwork.InRoom)
@@ -151,11 +161,6 @@ public class LobbyController : MonoBehaviourPunCallbacks
 
     }
     
-    public void ConnectToServer()
-    {
-        PhotonNetwork.ConnectUsingSettings();
-    }
-
     public void DisconnectFromServer()
     {
         PhotonNetwork.Disconnect();

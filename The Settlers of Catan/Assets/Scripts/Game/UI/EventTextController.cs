@@ -20,6 +20,9 @@ public class EventTextController : MonoBehaviour
     [SerializeField]
     private AudioSource audioSource;
 
+    [SerializeField]
+    private TextMeshProUGUI timerText;
+
     private PhotonView photonView;
     public enum EventCode
     {
@@ -107,6 +110,17 @@ public class EventTextController : MonoBehaviour
     public void SendEvent(EventCode messageCode, Player sender, params object[] additionalParams)
     {
         photonView.RPC("RPCEventReceived", RpcTarget.All, messageCode, sender != null ? sender.ActorNumber : -1, additionalParams);
+    }
+    
+    public void SetTurnTimer(int seconds)
+    {
+        photonView.RPC("RPCSetTurnTimer", RpcTarget.All, seconds);
+    }
+
+    [PunRPC]
+    private void RPCSetTurnTimer(int seconds)
+    {
+        this.timerText.text = seconds + (seconds == 1 ? " second" : " seconds");
     }
 
     [PunRPC]

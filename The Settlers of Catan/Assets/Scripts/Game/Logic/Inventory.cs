@@ -32,7 +32,7 @@ public class Inventory : MonoBehaviour
     
     private int[] stock =
     {
-        40, 40, 40, 40, 40,
+        0, 0, 0, 0, 0,
         0, 0, 0, 0, 0,
         START_ROAD_COUNT, START_SETTLEMENT_COUNT, START_CITY_COUNT, 0, 0
     };

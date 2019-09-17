@@ -1905,7 +1905,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dae7b54eb06278d489c7525d644377bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TurnDuration: 120
 --- !u!114 &67625834
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5632,7 +5631,7 @@ GameObject:
   - component: {fileID: 212648700}
   - component: {fileID: 212648699}
   m_Layer: 0
-  m_Name: TextMeshPro Text
+  m_Name: TimeRemainingText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5652,7 +5651,7 @@ RectTransform:
   m_Father: {fileID: 605111933}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMin: {x: 0.45, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
@@ -5713,7 +5712,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_textAlignment: 514
+  m_textAlignment: 513
   m_isAlignmentEnumConverted: 1
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -5836,6 +5835,7 @@ MonoBehaviour:
   eventPanel: {fileID: 670897617}
   currentPlayerText: {fileID: 892149535}
   audioSource: {fileID: 226129280}
+  timerText: {fileID: 212648699}
 --- !u!114 &226129279
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17311,7 +17311,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &605111933
 RectTransform:
   m_ObjectHideFlags: 0

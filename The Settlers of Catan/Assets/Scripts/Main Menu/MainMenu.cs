@@ -54,10 +54,9 @@ public class MainMenu : MonoBehaviour
         // localPlayer = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManager>().playerPrefab.GetComponent<PlayerConnection>();
         lobbyController = GameObject.Find("LobbyController").GetComponent<LobbyController>();
         roomController = GameObject.Find("RoomController").GetComponent<RoomController>();
-        
-        // Connect to Photon servers.
-        lobbyController.ConnectToServer();
 
+        // Connect to Photon servers.
+        PhotonNetwork.ConnectUsingSettings();
 
         // Fill in input field.
         playingAsField.text = PlayerPrefs.GetString("Username");
@@ -69,6 +68,11 @@ public class MainMenu : MonoBehaviour
     void Update()
     {
 
+    }
+
+    public void SetPlayerName(string name)
+    {
+        playingAsField.text = name;
     }
 
     // Window toggle functions.
@@ -164,7 +168,6 @@ public class MainMenu : MonoBehaviour
         {
             if (obj.CompareTag(panelTag))
             {
-                Debug.Log("setting " + panelTag + "to " + visibility);
                 obj.SetActive(visibility);
                 break;
             }
@@ -231,17 +234,20 @@ public class MainMenu : MonoBehaviour
     {
         ToggleWindow(WindowCode.ROOM_CREATION_WINDOW);
 
+        DisableBottomButtons();
         PhotonNetwork.JoinLobby();
     }
 
     public void RoomCreationBackPress()
     {
+        EnableBottomButtons();
         ToggleWindow(WindowCode.START_NEW_GAME_WINDOW);
     }
 
     public void RoomCreationConfirmationPress()
     {
 
+        DisableBottomButtons();
         string roomName = GameObject.FindGameObjectWithTag("RoomNameField").GetComponent<InputField>().text;
         lobbyController.CreateRoom(roomName);
         
@@ -250,12 +256,15 @@ public class MainMenu : MonoBehaviour
 
     public void JoinLobbyButtonPress()
     {
+        
         ToggleWindow(WindowCode.LOBBY_WINDOW);
-        PhotonNetwork.JoinLobby();
+        DisableBottomButtons();
     }
 
     public void LobbyBackPress()
     {
+
+        EnableBottomButtons();
         ToggleWindow(WindowCode.START_NEW_GAME_WINDOW);
 
         //lobbyController.MatchmakingCancel();
@@ -263,9 +272,9 @@ public class MainMenu : MonoBehaviour
     
     public void RoomLeavePress()
     {
-        ToggleWindow(WindowCode.LOBBY_WINDOW);
-
+        JoinLobbyButtonPress();
         roomController.LeaveRoom();
+        DisableBottomButtons();
     }
 
     public void ExitButtonPress()
@@ -294,7 +303,7 @@ public class MainMenu : MonoBehaviour
         StartCoroutine(BarFadeOut());
     }
 
-    public void ActivateBottomButtons()
+    public void EnableBottomButtons()
     {
         StartCoroutine(ConnectionBarFadeOut());
         startNewGameButton.interactable = true;
@@ -303,6 +312,15 @@ public class MainMenu : MonoBehaviour
         exitButton.interactable = true;
 
         playingAsField.interactable = true;
+
+    }
+
+    public void DisableBottomButtons()
+    {
+        startNewGameButton.interactable = false;
+        tutorialButton.interactable = false;
+        aboutButton.interactable = false;
+        
 
     }
 

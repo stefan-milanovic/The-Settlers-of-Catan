@@ -47,14 +47,19 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// <summary>
     /// The duration of the turn in seconds.
     /// </summary>
-    public float TurnDuration = 180f;
+    private readonly int TurnDuration = 180;
+
+    public int GetTurnDuration()
+    {
+        return TurnDuration;
+    }
 
     /// <summary>
     /// Gets the elapsed time in the current turn in seconds
     /// </summary>
     /// <value>The elapsed time in the turn.</value>
-    public float ElapsedTimeInTurn {
-        get { return ((float)(PhotonNetwork.ServerTimestamp - PhotonNetwork.CurrentRoom.GetTurnStart())) / 1000.0f; }
+    public int ElapsedTimeInTurn {
+        get { return ((PhotonNetwork.ServerTimestamp - PhotonNetwork.CurrentRoom.GetTurnStart())) / 1000; }
     }
 
 
@@ -62,8 +67,8 @@ public class TurnManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// Gets the remaining seconds for the current turn. Ranges from 0 to TurnDuration
     /// </summary>
     /// <value>The remaining seconds fo the current turn</value>
-    public float RemainingSecondsInTurn {
-        get { return Mathf.Max(0f, this.TurnDuration - this.ElapsedTimeInTurn); }
+    public int RemainingSecondsInTurn {
+        get { return Mathf.Max(0, this.TurnDuration - this.ElapsedTimeInTurn); }
     }
 
 

@@ -99,6 +99,7 @@ public class HumanPlayer : GamePlayer
 
                             eventTextController.SetCurrentPlayer(PhotonNetwork.LocalPlayer);
 
+                            currentPhase = Phase.FIRST_SETTLEMENT_PLACEMENT;
                             myTurn = true;
                             audioSource.Play();
                         }

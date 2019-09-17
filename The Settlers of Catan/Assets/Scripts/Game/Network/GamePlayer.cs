@@ -55,7 +55,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
     }
 
     // during dice roll phase the player can activate a development card from earlier
-    protected Phase currentPhase = Phase.FIRST_SETTLEMENT_PLACEMENT;
+    protected Phase currentPhase = Phase.TRADE_BUILD_IDLE;
 
     protected EventTextController eventTextController;
 
@@ -222,7 +222,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             }
         }
     }
-
+    
     #region IPunTurnManagerCallbacks
 
     // Called from TurnManager - Each player gets this called by their local turn manager
@@ -231,6 +231,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         Debug.Log("Turn " + turn + " beginning globally.");
         
         currentTurn = turn;
+
+        
         
         if (turn == 1)
         {
@@ -244,6 +246,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
                 // Claim colour slot.
                 ClaimColour();
 
+                myTurn = true;
+                
+
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
                 
                 // Turns starts once a colour slot is claimed.
@@ -256,6 +261,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
+
+                
+
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
                 tradeController.Init(inventory);
@@ -274,6 +282,8 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
 
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
+                
+
                 myTurn = true;
                 audioSource.Play();
                 setUpPhase = false;
@@ -287,6 +297,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             currentPlayer = PhotonNetwork.PlayerList[0];
             if (PhotonNetwork.LocalPlayer == currentPlayer)
             {
+
+                
+
                 Debug.Log("In turn" + turn + " the player to play is: " + PhotonNetwork.LocalPlayer.ActorNumber + ", name = " + PhotonNetwork.LocalPlayer.NickName);
                 myTurn = true;
                 audioSource.Play();
@@ -303,11 +316,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
         
         Debug.Log("Player id = " + PhotonNetwork.LocalPlayer.ActorNumber + " ending their turn.");
         myTurn = false;
-
+        
         eventTextController.SendEvent(EventTextController.EventCode.END_TURN, PhotonNetwork.LocalPlayer);
         turnManager.SendMove(null, true);
-        
-        
         
     }
 
@@ -660,7 +671,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             if (turn == 1)
             {
                 ClaimColour();
+                myTurn = true;
                 
+                
+
                 GameObject.Find("DiceController").GetComponent<DiceController>().SetDiceOwner(PhotonNetwork.LocalPlayer);
                 setUpPhase = true;
 
@@ -668,6 +682,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             }
             else if (turn == 2)
             {
+
+                
+
                 // Init trade.
                 tradeController = GameObject.Find("TradeController").GetComponent<TradeController>();
                 tradeController.Init(inventory);
@@ -680,6 +697,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             else if (turn == 3)
             {
                 
+
                 setUpPhase = false;
                 currentPhase = Phase.ROLL_DICE;
                 myTurn = true;
@@ -689,6 +707,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks, IPunTurnManagerCallbacks
             }
             else
             {
+                
                 myTurn = true;
                 audioSource.Play();
                 currentPhase = Phase.ROLL_DICE;
